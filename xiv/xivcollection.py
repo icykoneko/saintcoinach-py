@@ -4,7 +4,6 @@ from ex.relational.excollection import RelationalExCollection
 from ex.relational.sheet import IRelationalSheet
 from pack import PackCollection
 from xiv.sheet import XivSheet, XivRow, XivSheet2, XivSubRow
-from xiv.xivsheetmeta import XivSheetT
 
 
 class XivCollection(RelationalExCollection):
@@ -26,10 +25,12 @@ class XivCollection(RelationalExCollection):
         if match is None:
             return None
 
-        return match(self, source_sheet)
+        if source_sheet.header.variant == 2:
+            return XivSheet2[match](match, self, source_sheet)
+        return XivSheet[match](match, self, source_sheet)
 
     def __get_xiv_row_type(self, sheet_name: str):
         import xiv
         if sheet_name in xiv.__dict__:
-            return XivSheetT[xiv.__dict__[sheet_name]]
+            return xiv.__dict__[sheet_name]
         return None

@@ -150,7 +150,7 @@ class XivSheet(IXivSheet[T]):
             yield row
 
     def _create_row(self, source_row: IRelationalRow) -> T:
-        return self.__t_cls(self, source_row)
+        return cast(T, self.__t_cls(self, source_row))
 
     def __getitem__(self, item):
         def get_row(key):
