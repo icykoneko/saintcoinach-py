@@ -38,6 +38,10 @@ class IDataDefinition(object):
     def to_json(self) -> OrderedDict:
         pass
 
+    @abstractmethod
+    def resolve_references(self, sheet_def: 'SheetDefinition'):
+        pass
+
 
 class PositionedDataDefinition(yaml.YAMLObject):
     @property
@@ -123,6 +127,9 @@ class PositionedDataDefinition(yaml.YAMLObject):
         retv.inner_definition = DataDefinitionSerializer.from_json(obj)
         return retv
 
+    def resolve_references(self, sheet_def: 'SheetDefinition'):
+        self.inner_definition.resolve_references(sheet_def)
+
 
 class GroupDataDefinition(yaml.YAMLObject, IDataDefinition):
     yaml_tag = u'tag:yaml.org,2002:group_def'
@@ -146,7 +153,7 @@ class GroupDataDefinition(yaml.YAMLObject, IDataDefinition):
         return clone
 
     def __init__(self):
-        self.__members = []
+        self.__members = []  # type: List[IDataDefinition]
 
     def __repr__(self):
         return "%s(Members=%r)" % (
@@ -230,6 +237,10 @@ class GroupDataDefinition(yaml.YAMLObject, IDataDefinition):
         retv = GroupDataDefinition()
         retv.members = [DataDefinitionSerializer.from_json(m) for m in obj.get('members', [])]
         return retv
+
+    def resolve_references(self, sheet_def: 'SheetDefinition'):
+        for member in self.members:
+            member.resolve_references(sheet_def)
 
 
 class RepeatDataDefinition(yaml.YAMLObject, IDataDefinition):
@@ -333,6 +344,9 @@ class RepeatDataDefinition(yaml.YAMLObject, IDataDefinition):
         retv.repeated_definition = DataDefinitionSerializer.from_json(obj.get('definition', {}))
         return retv
 
+    def resolve_references(self, sheet_def: 'SheetDefinition'):
+        self.repeated_definition.resolve_references(sheet_def)
+
 
 class SingleDataDefinition(yaml.YAMLObject, IDataDefinition):
     yaml_tag = u'tag:yaml.org,2002:single_def'
@@ -415,6 +429,10 @@ class SingleDataDefinition(yaml.YAMLObject, IDataDefinition):
         return SingleDataDefinition(
             name=obj.get('name', None),
             converter=converter)
+
+    def resolve_references(self, sheet_def: 'SheetDefinition'):
+        if self.converter is not None:
+            self.converter.resolve_references(sheet_def)
 
     def __copy__(self):
         return SingleDataDefinition(self.name, self.convert)
@@ -563,11 +581,16 @@ class SheetDefinition(yaml.YAMLObject):
 
     @staticmethod
     def from_json(obj: dict):
-        return SheetDefinition(
+        sheet_def = SheetDefinition(
             name=obj.get('sheet', None),
             default_column=obj.get('defaultColumn', None),
             is_generic_reference_target=obj.get('isGenericReferenceTarget', False),
             data_definitions=[PositionedDataDefinition.from_json(j) for j in obj.get('definitions', [])])
+
+        for data_def in sheet_def.data_definitions:
+            data_def.resolve_references(sheet_def)
+
+        return sheet_def
 
     def compile(self):
         self.__column_definition_map = {}

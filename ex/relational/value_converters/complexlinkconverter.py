@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List
+from typing import List, cast
 from collections import OrderedDict
 import json
 
@@ -7,6 +7,7 @@ from ex.sheet import IRow
 from ex.datasheet import IDataRow
 from ex.relational.sheet import IRelationalRow, IRelationalSheet
 from ex.relational.valueconverter import IValueConverter
+from ex.relational.definition import SheetDefinition
 
 
 class IRowProducer(object):
@@ -17,7 +18,7 @@ class IRowProducer(object):
 
 class PrimaryKeyRowProducer(IRowProducer):
     def get_row(self, sheet: IRelationalSheet, key: int):
-        return sheet[key]
+        return None if key not in sheet else sheet[key]
 
 
 class IndexedRowProducer(IRowProducer):
@@ -64,13 +65,31 @@ class ColumnProjection(IProjectable):
         return relational_row[self.projected_column_name]
 
 
+class LinkCondition(object):
+    def __init__(self, **kwargs):
+        self.key_column_name = kwargs.get('key_column_name', None)  # type: str
+        self.key_column_index = kwargs.get('key_column_index', 0)  # type: int
+        self.value = kwargs.get('value', None)  # type: object
+        self.__value_type_changed = False
+
+    def match(self, row: IDataRow) -> bool:
+        row_value = row[self.key_column_index]
+        if not self.__value_type_changed and row_value is not None:
+            self.value = cast(type(row_value), self.value)
+            self.__value_type_changed = True
+        return row_value == self.value
+
+
 class SheetLinkData(object):
     def __init__(self, **kwargs):
         self.sheet_name = kwargs.get('sheet_name', None)  # type: str
         self.projected_column_name = kwargs.get('projected_column_name', None)  # type: str
         self.key_column_name = kwargs.get('key_column_name', None)  # type: str
+
         self.row_producer = kwargs.get('row_producer', None)  # type: IRowProducer
         self.projection = kwargs.get('projection', None)  # type: IProjectable
+
+        self.when = kwargs.get('when', None)  # type: LinkCondition
 
     def to_json(self):
         obj = OrderedDict()
@@ -79,6 +98,10 @@ class SheetLinkData(object):
             obj['project'] = self.projected_column_name
         if self.key_column_name is not None:
             obj['key'] = self.key_column_name
+        if self.when is not None:
+            obj['when'] = OrderedDict()
+            obj['when']['key'] = self.when.key_column_name
+            obj['when']['value'] = self.when.value
 
         return obj
 
@@ -99,6 +122,13 @@ class SheetLinkData(object):
             data.key_column_name = str(obj['key'])
             data.row_producer = IndexedRowProducer(
                 key_column_name=data.key_column_name)
+
+        when = obj.get('when', None)
+        if when is not None:
+            condition = LinkCondition()
+            condition.key_column_name = str(when['key'])
+            condition.value = when['value']  # Somehow convert to object?
+            data.when = condition
 
         return data
 
@@ -123,6 +153,9 @@ class ComplexLinkConverter(IValueConverter):
         coll = row.sheet.collection
 
         for link in self.__links:
+            if link.when is not None and not link.when.match(row):
+                continue
+
             sheet = coll.get_sheet(link.sheet_name)  # type: IRelationalSheet
             result = link.row_producer.get_row(sheet, key)
             if result is None:
@@ -130,7 +163,7 @@ class ComplexLinkConverter(IValueConverter):
 
             return link.projection.project(result)
 
-        return raw_value
+        return None
 
     def to_json(self):
         obj = OrderedDict()
@@ -142,3 +175,16 @@ class ComplexLinkConverter(IValueConverter):
     def from_json(obj: dict):
         return ComplexLinkConverter(
             links=[SheetLinkData.from_json(o) for o in obj['links']])
+
+    def resolve_references(self, sheet_def: SheetDefinition):
+        for link in self.__links:
+            if link.when is not None:
+                key_definition = next(
+                    filter(lambda d: d.inner_definition.get_name(0) == link.when.key_column_name,
+                           sheet_def.data_definitions),
+                    None)
+                if key_definition is None:
+                    raise Exception("Can't find conditional key column '%s' in sheet '%s'" %
+                                    (link.when.key_column_name, sheet_def.name))
+
+                link.when.key_column_index = key_definition.index

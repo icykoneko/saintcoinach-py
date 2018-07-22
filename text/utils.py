@@ -63,7 +63,8 @@ class StringTokens(object):
 
 class TagType(Enum):
     none = 0x00
-    Time = 0x07
+    ResetTime = 0x06
+    Time = 0x07  # TODO: It seems to set the time used further on.
     If = 0x08
     Switch = 0x09
     IfEquals = 0x0C

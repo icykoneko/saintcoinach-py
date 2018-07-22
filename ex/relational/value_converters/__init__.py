@@ -8,6 +8,7 @@ from ex.relational.sheet import IRelationalRow
 from ex.relational.valueconverter import IValueConverter
 from ex.relational.excollection import ExCollection
 from ex.relational.value_converters.complexlinkconverter import ComplexLinkConverter
+from ex.relational.definition import SheetDefinition
 
 
 class ColorConverter(IValueConverter, yaml.YAMLObject):
@@ -59,6 +60,9 @@ class ColorConverter(IValueConverter, yaml.YAMLObject):
     def from_json(obj: dict):
         return ColorConverter()
 
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return
+
 
 class GenericReferenceConverter(IValueConverter, yaml.YAMLObject):
     yaml_tag = u'tag:yaml.org,2002:ref_conv'
@@ -93,6 +97,9 @@ class GenericReferenceConverter(IValueConverter, yaml.YAMLObject):
     @staticmethod
     def from_json(obj: dict):
         return GenericReferenceConverter()
+
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return
 
 
 class IconConverter(IValueConverter, yaml.YAMLObject):
@@ -133,6 +140,9 @@ class IconConverter(IValueConverter, yaml.YAMLObject):
     @staticmethod
     def from_json(obj: dict):
         return IconConverter()
+
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return
 
 
 class MultiReferenceConverter(IValueConverter, yaml.YAMLObject):
@@ -186,6 +196,9 @@ class MultiReferenceConverter(IValueConverter, yaml.YAMLObject):
         converter.targets = [str(t) for t in obj.get('targets', [])]
         return converter
 
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return
+
 
 class QuadConverter(IValueConverter):
     @property
@@ -205,6 +218,9 @@ class QuadConverter(IValueConverter):
     @staticmethod
     def from_json(obj: object):
         return QuadConverter()
+
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return
 
 
 class SheetLinkConverter(IValueConverter, yaml.YAMLObject):
@@ -254,6 +270,9 @@ class SheetLinkConverter(IValueConverter, yaml.YAMLObject):
         converter = SheetLinkConverter()
         converter.target_sheet = obj.get('target', None)
         return converter
+
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return
 
 
 class TomestoneOrItemReferenceConverter(IValueConverter, yaml.YAMLObject):
@@ -312,3 +331,6 @@ class TomestoneOrItemReferenceConverter(IValueConverter, yaml.YAMLObject):
     @staticmethod
     def from_json(obj: dict):
         return TomestoneOrItemReferenceConverter()
+
+    def resolve_references(self, sheet_def: SheetDefinition):
+        return

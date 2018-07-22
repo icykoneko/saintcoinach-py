@@ -10,6 +10,9 @@ from indexfile import Directory
 from file import File
 
 
+__all__ = ['XIV']
+
+
 class ARealmReversed(object):
     _DEFINITION_FILE = 'ex.json'
     _VIEW_DEFINITION_FILE = 'exview.json'
@@ -55,3 +58,4 @@ class ARealmReversed(object):
 
 XIV = ARealmReversed(r"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn",
                      Language.english)
+

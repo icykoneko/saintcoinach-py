@@ -84,12 +84,12 @@ class ExCollection(object):
 
         EX_HPATH_FORMAT = "exd/%s.exh"
 
-        if name not in self.available_sheets:
-            raise KeyError
-
         sheet = self._sheets.get(name, None)
         if sheet is not None:
             return sheet
+
+        if name not in self.available_sheets:
+            raise KeyError("Unknown sheet '%s'" % name)
 
         exh_path = EX_HPATH_FORMAT % (name)
         exh = self.pack_collection.get_file(exh_path)

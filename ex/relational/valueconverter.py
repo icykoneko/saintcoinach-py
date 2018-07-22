@@ -1,6 +1,7 @@
 from abc import abstractmethod
 
 from ex.datasheet import IDataRow
+from ex.relational.definition import SheetDefinition
 
 
 class IValueConverter(object):
@@ -20,4 +21,8 @@ class IValueConverter(object):
 
     @abstractmethod
     def to_json(self) -> 'OrderedDict':
+        pass
+
+    @abstractmethod
+    def resolve_references(self, sheet_def: SheetDefinition):
         pass
