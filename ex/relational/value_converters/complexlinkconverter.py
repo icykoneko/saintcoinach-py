@@ -82,7 +82,6 @@ class LinkCondition(object):
 
 class SheetLinkData(object):
     def __init__(self, **kwargs):
-        self.sheet_name = kwargs.get('sheet_name', None)  # type: str
         self.projected_column_name = kwargs.get('projected_column_name', None)  # type: str
         self.key_column_name = kwargs.get('key_column_name', None)  # type: str
 
@@ -91,9 +90,12 @@ class SheetLinkData(object):
 
         self.when = kwargs.get('when', None)  # type: LinkCondition
 
+    @abstractmethod
+    def get_row(self, key: int, collection: 'ExCollection') -> IRow:
+        pass
+
     def to_json(self):
         obj = OrderedDict()
-        obj['sheet'] = self.sheet_name
         if self.projected_column_name is not None:
             obj['project'] = self.projected_column_name
         if self.key_column_name is not None:
@@ -107,7 +109,13 @@ class SheetLinkData(object):
 
     @staticmethod
     def from_json(obj: dict):
-        data = SheetLinkData(sheet_name=str(obj['sheet']))
+        data = SheetLinkData()
+        if obj.get('sheet', None) is not None:
+            data = SingleSheetLinkData(sheet_name=str(obj['sheet']))
+        elif obj.get('sheets', None) is not None:
+            data = MultiSheetLinkData(sheet_names=[str(t) for t in obj['sheets']])
+        else:
+            raise Exception("complexlink link must contain either 'sheet' or 'sheets'.")
 
         if obj.get('project', None) is None:
             data.projection = IdentityProjection()
@@ -133,6 +141,44 @@ class SheetLinkData(object):
         return data
 
 
+class SingleSheetLinkData(SheetLinkData):
+    def __init__(self, **kwargs):
+        super(SingleSheetLinkData, self).__init__(**kwargs)
+        #SheetLinkData.__init__(self, **kwargs)
+        self.sheet_name = kwargs.get('sheet_name', None)  # type: str
+
+    def to_json(self):
+        obj = super(SingleSheetLinkData, self).to_json()
+        obj['sheet'] = self.sheet_name
+        return obj
+
+    def get_row(self, key, collection):
+        sheet = collection.get_sheet(self.sheet_name)
+        return self.row_producer.get_row(sheet, key)
+
+
+class MultiSheetLinkData(SheetLinkData):
+    def __init__(self, **kwargs):
+        super(MultiSheetLinkData, self).__init__(**kwargs)
+        self.sheet_names = kwargs.get('sheet_names', None)  # type: List[str]
+
+    def to_json(self):
+        obj = super(MultiSheetLinkData, self).to_json()
+        obj['sheets'] = self.sheet_names
+        return obj
+
+    def get_row(self, key, collection):
+        for sheet_name in self.sheet_names:
+            sheet = collection.get_sheet(sheet_name)
+            if not any(filter(lambda r: key in r, sheet.header.data_file_ranges)):
+                continue
+
+            row = self.row_producer.get_row(sheet, key)
+            if row is not None:
+                return row
+        return None
+
+
 class ComplexLinkConverter(IValueConverter):
     @property
     def target_type_name(self): return 'Row'
@@ -156,8 +202,7 @@ class ComplexLinkConverter(IValueConverter):
             if link.when is not None and not link.when.match(row):
                 continue
 
-            sheet = coll.get_sheet(link.sheet_name)  # type: IRelationalSheet
-            result = link.row_producer.get_row(sheet, key)
+            result = link.get_row(key, coll)
             if result is None:
                 continue
 

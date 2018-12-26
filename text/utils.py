@@ -95,5 +95,7 @@ class TagType(Enum):
     SheetDe = 0x32
     SheetFr = 0x33
     InstanceContent = 0x40
+    UIForeground = 0x48
+    UIGlow = 0x49
     ZeroPaddedValue = 0x50
     Unknown60 = 0x60
