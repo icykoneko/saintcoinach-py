@@ -6,6 +6,7 @@ from xiv.placename import PlaceName
 
 class TerritoryType(XivRow):
     _weather_groups = None
+    _maps_by_index = None
 
     @property
     def name(self): return self.as_string('Name')
@@ -35,6 +36,18 @@ class TerritoryType(XivRow):
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(TerritoryType, self).__init__(sheet, source_row)
         self._weather_rate = None
+        self._maps_by_index = None
+
+    def get_related_map(self, index: int):
+        if self._maps_by_index is None:
+            self._maps_by_index = self._build_map_index()
+
+        _map = self._maps_by_index.get(index)
+        if _map is not None:
+            return _map
+
+        # Fallback to the default map. This may not be accurate.
+        return self.map
 
     def _build_weather_groups(self):
         _map = {}
@@ -45,5 +58,24 @@ class TerritoryType(XivRow):
             _map[weather_group.parent_row.key] = weather_group['WeatherRate']
         return _map
 
+    def _build_map_index(self):
+        _maps = filter(lambda m: m['TerritoryType'] == self.key,
+                       self.sheet.collection.get_sheet('Map'))
+
+        _index = {}
+
+        for _map in _maps:
+            map_id = str(_map.as_string('Id'))
+            if map_id is None or map_id == '':
+                continue
+
+            map_index = map_id[map_id.index('/') + 1:]
+            converted_index = int(map_index)
+            if converted_index in _index:
+                continue  # skip it for now
+
+            _index[converted_index] = _map
+
+        return _index
 
 register_xivrow(TerritoryType)

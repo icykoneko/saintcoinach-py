@@ -1,11 +1,25 @@
 from ex.column import Column
 import ex.relational
+import ex.relational.definition
 
 
 class RelationalColumn(Column):
     @property
     def header(self) -> 'ex.relational.RelationalHeader':
         return super(RelationalColumn, self).header
+
+    @property
+    def definition(self) -> 'ex.relational.definition.PositionedDataDefinition':
+        if self._has_definition:
+            return self._definition
+
+        if self.header.sheet_definition is not None:
+            definition = self.header.sheet_definition.get_definition(self.index)
+            if definition is not None:
+                self._definition = definition
+
+        self._has_definition = True
+        return self._definition
 
     @property
     def name(self):
@@ -23,11 +37,13 @@ class RelationalColumn(Column):
 
     def __init__(self, header, index, buffer, offset):
         super(RelationalColumn, self).__init__(header, index, buffer, offset)
+        self._has_definition = False
+        self._definition = None
 
     def read(self, buffer: bytes, row: 'ex.datasheet.IDataRow', offset: int = None):
         base_val = super(RelationalColumn, self).read(buffer, row, offset)
 
-        _def = self.header.sheet_definition
+        _def = self.definition
         return _def.convert(row, base_val, self.index) if _def is not None else base_val
 
     def __str__(self):
