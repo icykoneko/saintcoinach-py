@@ -132,7 +132,7 @@ class DefaultElement(INode):
     def __str__(self):
         s = ''
         s += StringTokens.TAG_OPEN
-        s += self.tag
+        s += str(self.tag)
         if len(self.__data.value) == 0:
             s += StringTokens.ELEMENT_CLOSE
             s += StringTokens.TAG_CLOSE
@@ -161,7 +161,7 @@ class EmptyElement(INode):
 
     def __str__(self):
         return "%s%s%s%s" % (StringTokens.TAG_OPEN,
-                             self.tag,
+                             str(self.tag),
                              StringTokens.ELEMENT_CLOSE,
                              StringTokens.TAG_CLOSE)
 
@@ -196,7 +196,7 @@ class GenericElement(INodeWithChildren, INodeWithArguments, IExpressionNode):
     def __str__(self):
         s = ''
         s += StringTokens.TAG_OPEN
-        s += self.tag
+        s += str(self.tag)
         s += str(self.__arguments)
 
         if self.content is None:
@@ -330,7 +330,7 @@ class TopLevelParameter(IExpressionNode):
     def __str__(self):
         return "%s%s%s%s" % (StringTokens.TOP_LEVEL_PARAMETER_NAME,
                              StringTokens.ARGUMENTS_OPEN,
-                             self.value,
+                             str(self.value),
                              StringTokens.ARGUMENTS_CLOSE)
 
     def accept(self, visitor: INodeVisitor[T]):
