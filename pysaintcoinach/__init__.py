@@ -53,14 +53,14 @@ class ARealmReversed(object):
         self._game_data = XivCollection(self._packs)
         self._game_data.active_language = language
         self._game_version = self._game_directory.joinpath('game', 'ffxivgame.ver').read_text()
-        self._views = self._read_view_collection()
+        #self._views = self._read_view_collection()
 
-        with open(self._DEFINITION_FILE, 'r', encoding='utf-8') as f:
+        with open(os.path.join(_SCRIPT_PATH, self._DEFINITION_FILE), 'r', encoding='utf-8') as f:
             self._game_data.definition = RelationDefinition.from_json_fp(f)
 
     def _read_view_collection(self):
-        view_file = Path(self._VIEW_DEFINITION_FILE)
-        with view_file.open(encoding='utf-8') as f:
+        view_file = Path(_SCRIPT_PATH, self._VIEW_DEFINITION_FILE)
+        with view_file.open(encoding='utf-8-sig') as f:
             return ViewCollection.from_json(json.load(f))
 
 
