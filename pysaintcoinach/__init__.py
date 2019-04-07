@@ -1,5 +1,13 @@
 from pathlib import Path
 import json
+import os, sys
+
+try:
+    _SCRIPT_PATH = os.path.abspath(__path__)
+except:
+    _SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
+# Add the Saint Coinach python API to the path.
+sys.path += [_SCRIPT_PATH]
 
 from ex import Language, ViewCollection
 from ex.relational.definition import RelationDefinition
