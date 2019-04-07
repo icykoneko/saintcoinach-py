@@ -1,0 +1,3 @@
+[submodule "SaintCoinach"]
+	path = SaintCoinach
+	url = git@github.com:ufx/SaintCoinach.git
