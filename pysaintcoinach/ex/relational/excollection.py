@@ -1,9 +1,9 @@
-from ex.excollection import ExCollection
-from ex.relational.datasheet import RelationalDataSheet
-from ex.relational.definition import RelationDefinition
-from ex.relational import IRelationalRow, IRelationalSheet
-from ex.relational.header import RelationalHeader
-from ex.relational.multisheet import RelationalMultiSheet, RelationalMultiRow
+from ..excollection import ExCollection
+from .datasheet import RelationalDataSheet
+from .definition import RelationDefinition
+from . import IRelationalRow, IRelationalSheet
+from .header import RelationalHeader
+from .multisheet import RelationalMultiSheet, RelationalMultiRow
 
 
 class RelationalExCollection(ExCollection):
@@ -21,8 +21,8 @@ class RelationalExCollection(ExCollection):
         return RelationalHeader(self, name, file)
 
     def _create_sheet(self, header):
-        from ex import variant1 as Variant1
-        from ex import variant2 as Variant2
+        from .. import variant1 as Variant1
+        from .. import variant2 as Variant2
         rel_header = header  # type: RelationalHeader
         if rel_header.variant == 2:
             return self.__create_sheet(Variant2.RelationalDataRow, rel_header)

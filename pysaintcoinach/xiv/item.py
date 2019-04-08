@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from ex.relational import IRelationalRow
-from xiv import register_xivrow, XivRow, IXivSheet
+
+from ..ex.relational import IRelationalRow
+from . import register_xivrow, XivRow, IXivSheet
 
 
 class ItemBase(XivRow):

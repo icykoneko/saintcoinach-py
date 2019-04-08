@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from typing import TypeVar, Union, Tuple
 
-from ex.sheet import IRow, ISheet
-import ex.relational
+from ..sheet import IRow, ISheet
+from ... import ex
+# import ex.relational
 
 
 class IRelationalRow(IRow):

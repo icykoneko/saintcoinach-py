@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, cast
 
-from ex.relational.sheet import IRelationalRow, IRelationalSheet
-import xiv
-import text
-import imaging
+from ..ex.relational.sheet import IRelationalRow, IRelationalSheet
+from .. import xiv
+from .. import text
+from .. import imaging
 
 
 class IXivRow(IRelationalRow):
@@ -223,4 +223,3 @@ class XivSheet2(XivSheet[T]):
 
     def _create_sub_row(self, source_row: IRelationalRow) -> T:
         return self.__t_cls(self, source_row)
-

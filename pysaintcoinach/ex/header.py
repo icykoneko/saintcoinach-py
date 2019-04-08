@@ -1,10 +1,10 @@
 from typing import Iterable as IterableT, Sequence as SequenceT
 from struct import unpack_from
 
-from ex.language import Language
-from ex.column import Column
-import ex
-from file import File
+from .language import Language
+from .column import Column
+from ..file import File
+from .. import ex
 
 
 class Header(object):

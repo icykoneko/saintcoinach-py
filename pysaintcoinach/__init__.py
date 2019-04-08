@@ -7,15 +7,14 @@ try:
 except:
     _SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 # Add the Saint Coinach python API to the path.
-sys.path += [_SCRIPT_PATH]
+# sys.path += [_SCRIPT_PATH]
 
-from ex import Language, ViewCollection
-from ex.relational.definition import RelationDefinition
-from xiv import XivCollection
-from pack import PackCollection
-
-from indexfile import Directory
-from file import File
+from .ex import Language, ViewCollection
+from .ex.relational.definition import RelationDefinition
+from .xiv import XivCollection
+from .pack import PackCollection
+from .indexfile import Directory
+from .file import File
 
 
 __all__ = ['XIV']
@@ -66,4 +65,3 @@ class ARealmReversed(object):
 
 XIV = ARealmReversed(r"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn",
                      Language.english)
-

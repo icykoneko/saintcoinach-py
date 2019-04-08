@@ -4,11 +4,11 @@ from weakref import WeakValueDictionary
 from struct import unpack_from
 from collections import OrderedDict
 
-from file import File
-from ex.sheet import IRow, ISheet
-from ex.language import Language
-from ex.header import Header
-import ex
+from ..file import File
+from .sheet import IRow, ISheet
+from .language import Language
+from .header import Header
+from .. import ex
 
 
 class IDataRow(IRow):
@@ -282,4 +282,3 @@ class DataSheet(IDataSheet[T]):
     def __contains__(self, row: int):
         self.__create_all_partial_sheets()
         return row in self.__row_to_partial_sheet_map
-

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
-from ex.datasheet import IDataRow
-from ex.relational.definition import SheetDefinition
+from ..datasheet import IDataRow
+from .definition import SheetDefinition
 
 
 class IValueConverter(object):

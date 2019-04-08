@@ -1,6 +1,7 @@
-from ex.column import Column
-import ex.relational
-import ex.relational.definition
+from ..column import Column
+from ... import ex
+# import ex.relational
+# import ex.relational.definition
 
 
 class RelationalColumn(Column):

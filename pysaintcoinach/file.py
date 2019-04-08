@@ -18,7 +18,7 @@ class FileType(Enum):
 class FileFactory(object):
     @staticmethod
     def get(pack, file):
-        from imaging import ImageFile
+        from .imaging import ImageFile
 
         stream = pack.get_data_stream(file.dat_file)
         stream.seek(file.offset)

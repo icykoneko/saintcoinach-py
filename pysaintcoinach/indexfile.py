@@ -4,8 +4,8 @@ from weakref import WeakValueDictionary
 import struct
 import zlib
 
-from pack import Pack
-from file import FileFactory
+from .pack import Pack
+from .file import FileFactory
 
 
 def _compute_hash(s):

@@ -403,7 +403,7 @@ class SingleDataDefinition(yaml.YAMLObject, IDataDefinition):
 
     @staticmethod
     def from_json(obj: dict):
-        from ex.relational.value_converters import ColorConverter, IconConverter, MultiReferenceConverter, \
+        from ..value_converters import ColorConverter, IconConverter, MultiReferenceConverter, \
             SheetLinkConverter, GenericReferenceConverter, TomestoneOrItemReferenceConverter, ComplexLinkConverter
         converter_obj = obj.get('converter', None)  # type: dict
         converter = None

@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from typing import Iterable, List
 
-from text.utils import TagType, StringTokens
+from ..utils import TagType, StringTokens
 
 
 class IExpression(ABC):

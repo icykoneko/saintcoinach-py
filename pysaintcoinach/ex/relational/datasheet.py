@@ -1,11 +1,12 @@
 from abc import abstractmethod
 from typing import TypeVar, Union, Tuple, Type, Dict, Generic
 
-from ex.datasheet import IDataRow, IDataSheet, DataSheet, PartialDataSheet
-from ex.relational.sheet import IRelationalRow, IRelationalSheet
-from ex.sheet import ISheet
-from file import File
-import ex.relational
+from ..datasheet import IDataRow, IDataSheet, DataSheet, PartialDataSheet
+from .sheet import IRelationalRow, IRelationalSheet
+from ..sheet import ISheet
+from ...file import File
+from ... import ex
+# import ex.relational
 
 
 T = TypeVar('T', bound=IDataRow)

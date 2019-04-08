@@ -1,6 +1,6 @@
-from xiv import XivRow, IXivSheet
-from ex.relational import IRelationalRow
-import text
+from . import XivRow, IXivSheet
+from ..ex.relational import IRelationalRow
+from .. import text
 
 
 class PlaceName(XivRow):

@@ -1,8 +1,8 @@
 from typing import TypeVar, Generic, Type, Union, Iterable, List
 from abc import ABC, abstractmethod
 
-from text.utils import TagType, NodeFlags, StringTokens
-import text.expressions as expressions
+from ..utils import TagType, NodeFlags, StringTokens
+from .. import expressions
 
 T = TypeVar('T')
 

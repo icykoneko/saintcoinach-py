@@ -179,7 +179,7 @@ class Pack(Iterable):
                  id: PackIdentifier,
                  collection: PackCollection = None):
         # Import here to prevent mutual dependency.
-        from indexfile import IndexSource, Index, Index2Source, Index2
+        from .indexfile import IndexSource, Index, Index2Source, Index2
 
         if isinstance(data_directory, str):
             data_directory = Path(data_directory)

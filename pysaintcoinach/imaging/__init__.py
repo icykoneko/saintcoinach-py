@@ -7,9 +7,9 @@ from typing import Iterable, List, Callable, Dict
 
 from PIL import Image
 
-from file import File, FileCommonHeader
-from indexfile import Directory
-from pack import Pack
+from ..file import File, FileCommonHeader
+from ..indexfile import Directory
+from ..pack import Pack
 from .iconhelper import IconHelper
 
 

@@ -1,8 +1,10 @@
 from typing import List, Iterable
-from ex.header import Header
-from ex.relational.column import RelationalColumn
-import ex.relational
-import ex.relational.definition
+
+from ..header import Header
+from .column import RelationalColumn
+from ... import ex
+# import ex.relational
+# import ex.relational.definition
 
 class RelationalHeader(Header):
     @property

@@ -1,6 +1,6 @@
-from xiv import register_xivrow, XivRow, IXivSheet
-from ex.relational import IRelationalRow
-from text import XivString
+from ..xiv import register_xivrow, XivRow, IXivSheet
+from ..ex.relational import IRelationalRow
+from ..text import XivString
 
 
 class Weather(XivRow):

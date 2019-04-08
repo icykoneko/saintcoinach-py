@@ -2,11 +2,11 @@ from typing import TypeVar, Generic, Tuple, Iterable, Type
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
-from ex.sheet import IRow, ISheet
-from ex.language import Language
-from ex.header import Header
-from ex.datasheet import DataSheet
-import ex
+from .sheet import IRow, ISheet
+from .language import Language
+from .header import Header
+from .datasheet import DataSheet
+from .. import ex
 
 
 class IMultiRow(IRow):

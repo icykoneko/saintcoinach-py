@@ -3,12 +3,12 @@ import yaml
 import json
 from collections import OrderedDict
 
-from ex.datasheet import IDataRow
-from ex.relational.sheet import IRelationalRow
-from ex.relational.valueconverter import IValueConverter
-from ex.relational.excollection import ExCollection
-from ex.relational.value_converters.complexlinkconverter import ComplexLinkConverter
-from ex.relational.definition import SheetDefinition
+from ...datasheet import IDataRow
+from ..sheet import IRelationalRow
+from ..valueconverter import IValueConverter
+from ..excollection import ExCollection
+from .complexlinkconverter import ComplexLinkConverter
+from ..definition import SheetDefinition
 
 
 class ColorConverter(IValueConverter, yaml.YAMLObject):
@@ -276,7 +276,7 @@ class SheetLinkConverter(IValueConverter, yaml.YAMLObject):
 
 
 class TomestoneOrItemReferenceConverter(IValueConverter, yaml.YAMLObject):
-    import xiv
+    from .... import xiv
 
     yaml_tag = u'tag:yaml.org,2002:tomestone_item_conv'
 

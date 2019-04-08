@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from ex.relational import IRelationalRow
-from xiv import register_xivrow, XivRow, IXivSheet
 
-from xiv.placename import PlaceName
+from ..ex.relational import IRelationalRow
+from ..xiv import register_xivrow, XivRow, IXivSheet
+
+from ..xiv.placename import PlaceName
 
 class TerritoryType(XivRow):
     _weather_groups = None

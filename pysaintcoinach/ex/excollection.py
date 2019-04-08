@@ -3,13 +3,12 @@ from weakref import WeakValueDictionary
 from enum import Enum
 from typing import TypeVar, Generic, overload, Dict
 
-from ex.header import Header
-from ex.datasheet import DataSheet
-from ex.multisheet import MultiRow, MultiSheet
-
-from pack import PackCollection
-from ex.language import Language
-import ex
+from .header import Header
+from .datasheet import DataSheet
+from .multisheet import MultiRow, MultiSheet
+from ..pack import PackCollection
+from .language import Language
+from .. import ex
 
 T = TypeVar('T')
 

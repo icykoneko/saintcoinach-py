@@ -1,8 +1,8 @@
 from typing import Dict, Union
 from struct import unpack_from
 
-from ex.datasheet import DataRowBase, IDataSheet
-from ex.relational.datasheet import IRelationalDataRow, IRelationalDataSheet
+from ..datasheet import DataRowBase, IDataSheet
+from ..relational.datasheet import IRelationalDataRow, IRelationalDataSheet
 
 
 class DataRow(DataRowBase):

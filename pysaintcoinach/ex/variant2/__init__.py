@@ -1,10 +1,10 @@
 from struct import unpack_from
 from typing import Iterable as IterableT, TypeVar, Union, Dict
 
-from ex.datasheet import DataRowBase, IDataSheet, IDataRow
-from ex.column import Column
-from ex.relational import IRelationalDataRow
-from ex.relational.datasheet import IRelationalDataSheet
+from ..datasheet import DataRowBase, IDataSheet, IDataRow
+from ..column import Column
+from ..relational import IRelationalDataRow
+from ..relational.datasheet import IRelationalDataSheet
 
 
 class SubRow(DataRowBase, IRelationalDataRow):

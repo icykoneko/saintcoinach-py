@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from typing import TypeVar, Tuple, Type, Union
 
-from ex.language import Language
-from ex.multisheet import IMultiRow, IMultiSheet, MultiRow, MultiSheet
-from ex.relational.datasheet import IRelationalDataRow, RelationalDataSheet
-from ex.relational.sheet import IRelationalRow, IRelationalSheet
-from ex.sheet import ISheet
-import ex.relational
+from ..language import Language
+from ..multisheet import IMultiRow, IMultiSheet, MultiRow, MultiSheet
+from .datasheet import IRelationalDataRow, RelationalDataSheet
+from .sheet import IRelationalRow, IRelationalSheet
+from ..sheet import ISheet
+from ... import ex
+# import ex.relational
 
 
 class IRelationalMultiRow(IRelationalRow, IMultiRow):

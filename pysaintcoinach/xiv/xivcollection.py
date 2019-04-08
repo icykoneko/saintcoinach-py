@@ -1,9 +1,9 @@
 from typing import Dict, Generic
 
-from ex.relational.excollection import RelationalExCollection
-from ex.relational.sheet import IRelationalSheet
-from pack import PackCollection
-from xiv.sheet import XivSheet, XivRow, XivSheet2, XivSubRow
+from ..ex.relational.excollection import RelationalExCollection
+from ..ex.relational.sheet import IRelationalSheet
+from ..pack import PackCollection
+from .sheet import XivSheet, XivRow, XivSheet2, XivSubRow
 
 
 class XivCollection(RelationalExCollection):
@@ -30,7 +30,7 @@ class XivCollection(RelationalExCollection):
         return XivSheet[match](match, self, source_sheet)
 
     def __get_xiv_row_type(self, sheet_name: str):
-        import xiv
+        from .. import xiv
         if sheet_name in xiv.__dict__:
             return xiv.__dict__[sheet_name]
         return None

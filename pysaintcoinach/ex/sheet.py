@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Union, Tuple, Iterable, TypeVar
 
-import ex
+from .. import ex
 
 
 class IRow(ABC):

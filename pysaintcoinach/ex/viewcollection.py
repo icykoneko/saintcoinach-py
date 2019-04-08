@@ -1,6 +1,6 @@
 import json
 
-from ex.relational.definition import ViewDefinition
+from .relational.definition import ViewDefinition
 
 
 class ViewCollection(object):

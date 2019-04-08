@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from struct import unpack_from
 
-import ex
-import text
+from ... import ex
+from ... import text
 
 
 class DataReader(ABC):

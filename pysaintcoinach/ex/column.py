@@ -1,8 +1,8 @@
 import struct
 import io
 
-from ex.datareaders import DataReader
-import ex
+from .datareaders import DataReader
+from .. import ex
 
 
 class Column(object):

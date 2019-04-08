@@ -2,11 +2,11 @@ from typing import Iterable, List, Tuple, cast
 from datetime import timedelta
 from itertools import dropwhile
 
-from xiv import register_xivrow, XivRow, IXivSheet
-from ex.relational import IRelationalRow
-from eorzeadatetime import EorzeaDateTime
+from ..xiv import register_xivrow, XivRow, IXivSheet
+from ..ex.relational import IRelationalRow
+from ..eorzeadatetime import EorzeaDateTime
 
-from xiv.weather import Weather
+from ..xiv.weather import Weather
 
 
 class WeatherRate(XivRow):

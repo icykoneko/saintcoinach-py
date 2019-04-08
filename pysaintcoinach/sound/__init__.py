@@ -4,7 +4,7 @@ from construct import Struct, Const, Int16ul, Int16ub, Int32ul, Int32ub, BytesIn
 from struct import unpack_from, pack
 from abc import abstractmethod
 
-from file import File
+from ..file import File
 
 
 class ScdCodec(Enum):
