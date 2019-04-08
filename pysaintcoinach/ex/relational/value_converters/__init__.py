@@ -123,13 +123,13 @@ class IconConverter(IValueConverter, yaml.YAMLObject):
         pass
 
     def convert(self, row: IDataRow, raw_value: object):
-        import imaging
+        from ....imaging import IconHelper
         nr = int(raw_value)
         if nr < 0 or nr > 999999:
             return None
 
         sheet = row.sheet
-        return imaging.IconHelper.get_icon(sheet.collection.pack_collection,
+        return IconHelper.get_icon(sheet.collection.pack_collection,
                                            nr, sheet.language)
 
     def to_json(self):
