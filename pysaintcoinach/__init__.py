@@ -6,8 +6,6 @@ try:
     _SCRIPT_PATH = os.path.abspath(__path__)
 except:
     _SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
-# Add the Saint Coinach python API to the path.
-# sys.path += [_SCRIPT_PATH]
 
 from .ex import Language, ViewCollection
 from .ex.relational.definition import RelationDefinition
@@ -17,7 +15,7 @@ from .indexfile import Directory
 from .file import File
 
 
-__all__ = ['XIV']
+__all__ = ['ARealmReversed']
 
 
 class ARealmReversed(object):
@@ -63,5 +61,6 @@ class ARealmReversed(object):
             return ViewCollection.from_json(json.load(f))
 
 
-XIV = ARealmReversed(r"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn",
-                     Language.english)
+# This is an example of how to use this library.
+# XIV = ARealmReversed(r"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn",
+#                      Language.english)
