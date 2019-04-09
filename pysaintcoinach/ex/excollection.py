@@ -103,8 +103,8 @@ class ExCollection(object):
         return Header(self, name, file)
 
     def _create_sheet(self, header):
-        from ex import variant1 as Variant1
-        from ex import variant2 as Variant2
+        from . import variant1 as Variant1
+        from . import variant2 as Variant2
         if header.variant == 1:
             return self.__create_sheet(Variant1.DataRow, header)
         return self.__create_sheet(Variant2.DataRow, header)

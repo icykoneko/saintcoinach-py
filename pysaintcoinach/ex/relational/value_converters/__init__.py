@@ -123,7 +123,7 @@ class IconConverter(IValueConverter, yaml.YAMLObject):
         pass
 
     def convert(self, row: IDataRow, raw_value: object):
-        import imaging
+        from .... import imaging
         nr = int(raw_value)
         if nr < 0 or nr > 999999:
             return None
