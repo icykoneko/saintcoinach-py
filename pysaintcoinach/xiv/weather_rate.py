@@ -39,7 +39,7 @@ class WeatherRate(XivRow):
         self._possible_weathers = list(set(w))
         self._weather_rates = wr
 
-    def forcast(self, time: EorzeaDateTime) -> Weather:
+    def forecast(self, time: EorzeaDateTime) -> Weather:
         def calc_target(time):
             # Generate a number between [0..99] based on time.
             # Convert the Eorzea date/time into Unix Time.
@@ -60,9 +60,9 @@ class WeatherRate(XivRow):
             return (step2 % 100) & 0xFFFFFFFF
 
         target = calc_target(time)
-        forcasted_weather = next(dropwhile(lambda x: target >= x[0], self._weather_rates), None)
-        if forcasted_weather is not None:
-            return forcasted_weather[1]
+        forecasted_weather = next(dropwhile(lambda x: target >= x[0], self._weather_rates), None)
+        if forecasted_weather is not None:
+            return forecasted_weather[1]
         else:
             return None
 
