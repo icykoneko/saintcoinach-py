@@ -21,12 +21,21 @@ class ExdHelper(object):
     def convert_rows_core(rows, language, cols, get_key):
         out_rows = {}
         for row in sorted(rows, key=lambda x: x.key):
-            key, row_dict = ExdHelper.convert_row(row, language, cols, get_key)
+            key, row_dict = ExdHelper._convert_row(row, language, cols, get_key)
             out_rows[key] = row_dict
         return out_rows
 
     @staticmethod
-    def convert_row(row, language, cols, get_key):
+    def convert_row(row: IRow, language: Language = None):
+        cols = row.sheet.header.columns
+        if row.sheet.header.variant == 1:
+            get_key = ExdHelper.get_row_key
+        else:
+            get_key = ExdHelper.get_sub_row_key
+        return ExdHelper._convert_row(row, language, cols, get_key)
+
+    @staticmethod
+    def _convert_row(row, language, cols, get_key):
         from .ex import ISheet, IRow, IMultiRow
         from .xiv import XivRow, IXivRow
         use_row = row

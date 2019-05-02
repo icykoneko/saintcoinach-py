@@ -64,3 +64,19 @@ class ARealmReversed(object):
 # This is an example of how to use this library.
 # XIV = ARealmReversed(r"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn",
 #                      Language.english)
+
+def get_default_xiv():
+    from . import text
+    _string_decoder = text.XivStringDecoder.default()
+    # Override the tag decoder for emphasis so it doesn't produce tags in string...
+    def omit_tag_decoder(i, t, l):
+        text.XivStringDecoder.get_integer(i)
+        return text.nodes.StaticString('')
+
+    _string_decoder.set_decoder(text.TagType.Emphasis.value, omit_tag_decoder)
+    _string_decoder.set_decoder(
+        text.TagType.SoftHyphen.value,
+        lambda i,t,l: text.nodes.StaticString(_string_decoder.dash))
+
+    return ARealmReversed(r"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn",
+                          Language.english)
