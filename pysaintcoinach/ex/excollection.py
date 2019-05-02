@@ -110,6 +110,6 @@ class ExCollection(object):
         return self.__create_sheet(Variant2.DataRow, header)
 
     def __create_sheet(self, t, header):
-        if header.available_languages_count >- 1:
+        if header.available_languages_count >= 1:
             return MultiSheet[MultiRow, t](MultiRow, t, self, header)
         return DataSheet[t](t, self, header, header.available_languages[0])

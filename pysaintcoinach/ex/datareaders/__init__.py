@@ -70,7 +70,7 @@ class PackedBooleanDataReader(DataReader):
 
     def __init__(self, mask):
         self._mask = mask
-        self._name = "bit%02X" % mask
+        self._name = "bit&%02X" % mask
 
     def read(self, buffer: bytes, **kwargs):
         if 'offset' in kwargs:
