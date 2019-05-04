@@ -47,8 +47,6 @@ class ExdHelper(object):
         key = get_key(use_row)
         out_row = {}
         for col in cols:
-            if col.name is None:
-                continue
             v = None
             if language is None or multi_row is None:
                 v = use_row[col.index]
@@ -56,7 +54,7 @@ class ExdHelper(object):
                 v = multi_row[(col.index, language)]
 
             if v is not None:
-                out_row[col.name] = str(v)
+                out_row[col.name or col.index] = str(v)
 
         return key, out_row
 
