@@ -1,8 +1,9 @@
-from . import XivRow, IXivSheet
 from ..ex.relational import IRelationalRow
+from . import xivrow, XivRow, IXivSheet
 from .. import text
 
 
+@xivrow
 class PlaceName(XivRow):
     @property
     def name(self) -> text.XivString:

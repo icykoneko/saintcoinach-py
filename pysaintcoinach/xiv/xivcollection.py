@@ -29,8 +29,7 @@ class XivCollection(RelationalExCollection):
             return XivSheet2[match](match, self, source_sheet)
         return XivSheet[match](match, self, source_sheet)
 
-    def __get_xiv_row_type(self, sheet_name: str):
-        from .. import xiv
-        if sheet_name in xiv.__dict__:
-            return xiv.__dict__[sheet_name]
-        return None
+    @staticmethod
+    def __get_xiv_row_type(sheet_name: str):
+        from . import REGISTERED_ROW_CLASSES
+        return REGISTERED_ROW_CLASSES.get(sheet_name, None)

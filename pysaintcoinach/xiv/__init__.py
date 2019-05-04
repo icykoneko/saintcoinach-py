@@ -15,9 +15,17 @@ def as_row_type(sheet_name: str) -> Type:
     return REGISTERED_ROW_CLASSES.get(sheet_name, XivRow)
 
 
-# Import sheet-specific classes
-from .item import Item
-from .placename import PlaceName
-from .territory_type import TerritoryType
-from .weather import Weather
-from .weather_rate import WeatherRate
+def xivrow(cls):
+    register_xivrow(cls)
+    return cls
+
+
+def _initialize():
+    import pkgutil
+    import importlib
+
+    for importer, modname, ispkg in pkgutil.iter_modules(__path__, "."):
+        importlib.import_module(modname, __package__)
+
+
+_initialize()

@@ -1,7 +1,5 @@
-from abc import ABC, abstractmethod
-
 from ..ex.relational import IRelationalRow
-from . import register_xivrow, XivRow, IXivSheet
+from . import xivrow, XivRow, IXivSheet
 
 
 class ItemBase(XivRow):
@@ -17,6 +15,7 @@ class ItemBase(XivRow):
         super(ItemBase, self).__init__(sheet, source_row)
 
 
+@xivrow
 class Item(ItemBase):
     @property
     def bid(self):
@@ -28,6 +27,3 @@ class Item(ItemBase):
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(Item, self).__init__(sheet, source_row)
-
-
-register_xivrow(Item)

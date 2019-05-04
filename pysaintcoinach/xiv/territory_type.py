@@ -1,10 +1,12 @@
-from abc import ABC, abstractmethod
-
 from ..ex.relational import IRelationalRow
-from ..xiv import register_xivrow, XivRow, IXivSheet
+from . import xivrow, XivRow, IXivSheet
+from . import as_row_type
 
-from ..xiv.placename import PlaceName
 
+PlaceName = as_row_type('PlaceName')
+
+
+@xivrow
 class TerritoryType(XivRow):
     _weather_groups = None
     _maps_by_index = None
@@ -78,5 +80,3 @@ class TerritoryType(XivRow):
             _index[converted_index] = _map
 
         return _index
-
-register_xivrow(TerritoryType)

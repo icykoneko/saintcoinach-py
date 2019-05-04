@@ -1,8 +1,9 @@
-from ..xiv import register_xivrow, XivRow, IXivSheet
 from ..ex.relational import IRelationalRow
+from . import xivrow, XivRow, IXivSheet
 from ..text import XivString
 
 
+@xivrow
 class Weather(XivRow):
     @property
     def name(self) -> XivString: return self.as_string('Name')
@@ -18,6 +19,3 @@ class Weather(XivRow):
 
     def __str__(self):
         return self.name
-
-
-register_xivrow(Weather)

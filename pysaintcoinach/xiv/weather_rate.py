@@ -2,13 +2,16 @@ from typing import Iterable, List, Tuple, cast
 from datetime import timedelta
 from itertools import dropwhile
 
-from ..xiv import register_xivrow, XivRow, IXivSheet
 from ..ex.relational import IRelationalRow
+from . import xivrow, XivRow, IXivSheet
+from . import as_row_type
 from ..eorzeadatetime import EorzeaDateTime
 
-from ..xiv.weather import Weather
+
+Weather = as_row_type('Weather')
 
 
+@xivrow
 class WeatherRate(XivRow):
     WEATHER_CHANGE_INTERVAL = timedelta(hours=8)
 
@@ -29,6 +32,8 @@ class WeatherRate(XivRow):
         min = 0
         for i in range(count):
             weather = cast(Weather, self[('Weather', i)])
+            if weather.key == 0:
+                continue
             rate = self.as_int32('Rate', i)
 
             w += [weather]
@@ -65,5 +70,3 @@ class WeatherRate(XivRow):
             return forecasted_weather[1]
         else:
             return None
-
-register_xivrow(WeatherRate)
