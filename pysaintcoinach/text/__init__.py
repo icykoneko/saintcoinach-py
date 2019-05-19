@@ -134,6 +134,20 @@ class XivStringDecoder(object):
 
         self.set_decoder(TagType.LineBreak.value, lambda i,t,l: nodes.StaticString(self.new_line))
 
+        # Sheets
+        # Sheet name, Row[, Column[, Parameters]+]
+        self.set_decoder(TagType.Sheet.value,
+                         lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 2, 0x7fffffff))
+        # Sheet name, Attributive row, Sheet row[, Sheet column[, Attributive index[, Parameters]+]
+        self.set_decoder(TagType.SheetDe.value,
+                         lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 3, 0x7fffffff))
+        self.set_decoder(TagType.SheetEn.value,
+                         lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 3, 0x7fffffff))
+        self.set_decoder(TagType.SheetFr.value,
+                         lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 3, 0x7fffffff))
+        self.set_decoder(TagType.SheetJa.value,
+                         lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 3, 0x7fffffff))
+
         self.set_decoder(TagType.Value.value,
                          lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.ZeroPaddedValue.value, self._decode_zero_padded_value)
