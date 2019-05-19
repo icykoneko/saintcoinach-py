@@ -120,6 +120,7 @@ class XivStringDecoder(object):
 
         self.__default_tag_decoder = self._decode_tag_default
 
+        # For now, these need to use Enum.value so existing scripts remain compatible.
         self.set_decoder(TagType.Clickable.value,
                          lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 1, 0x7fffffff))
         self.set_decoder(TagType.Color.value, self._decode_color)
@@ -128,6 +129,8 @@ class XivStringDecoder(object):
         self.set_decoder(TagType.Dash.value, lambda i,t,l: nodes.StaticString(self.dash))
         self.set_decoder(TagType.Emphasis.value, self._decode_generic_surrounding_tag)
         self.set_decoder(TagType.Emphasis2.value, self._decode_generic_surrounding_tag)
+
+        self.set_decoder(TagType.If.value, self._decode_if)
 
         self.set_decoder(TagType.LineBreak.value, lambda i,t,l: nodes.StaticString(self.new_line))
 
@@ -171,8 +174,9 @@ class XivStringDecoder(object):
         tag = _read_byte(input)
         length = self._get_integer(input)
         end = input.tell() + length
+        tag = TagType(tag)
         decoder = None  # type: 'TagDecoder'
-        decoder = self.__tag_decoders.get(tag, self.default_tag_decoder)
+        decoder = self.__tag_decoders.get(tag.value, self.default_tag_decoder)
         result = decoder(input, tag, length)
         if input.tell() != end:
             input.seek(end)
@@ -197,6 +201,9 @@ class XivStringDecoder(object):
             return nodes.StaticInteger(t - 1)
         if t < 0xE0:
             return nodes.TopLevelParameter(t - 1)
+
+        if isinstance(expr_type, int):
+            expr_type = DecodeExpressionType(expr_type)
 
         if expr_type == DecodeExpressionType.Decode:
             return self.decode(input, self._get_integer(input))
@@ -228,8 +235,22 @@ class XivStringDecoder(object):
             return nodes.StaticInteger(v)
         elif expr_type == DecodeExpressionType.Int32:
             return nodes.StaticInteger(self._get_integer(input, IntegerType.Int32))
+        elif expr_type in (DecodeExpressionType.GreaterThanOrEqualTo,
+                           DecodeExpressionType.GreaterThan,
+                           DecodeExpressionType.LessThanOrEqualTo,
+                           DecodeExpressionType.LessThan,
+                           DecodeExpressionType.NotEqual,
+                           DecodeExpressionType.Equal):
+            left = self._decode_expression(input)
+            right = self._decode_expression(input)
+            return nodes.Comparison(expr_type, left, right)
+        elif expr_type in (DecodeExpressionType.IntegerParameter,
+                           DecodeExpressionType.PlayerParameter,
+                           DecodeExpressionType.StringParameter,
+                           DecodeExpressionType.ObjectParameter):
+            return nodes.Parameter(expr_type, self._decode_expression(input))
         else:
-            raise RuntimeError('Expression type not supported: 0x%02x' % expr_type)
+            raise RuntimeError('Expression type not supported: %s' % expr_type)
 
     def _decode_generic_element(self, input: io.BytesIO, tag: TagType, length: int, arg_count: int, has_content: bool) -> INode:
         if length == 0:
@@ -250,7 +271,13 @@ class XivStringDecoder(object):
                                                         length: int,
                                                         min_count: int,
                                                         max_count: int) -> INode:
-        return NotImplemented
+        end = input.tell() + length
+        args = []  # type: List[INode]
+        i = 0
+        while i < max_count and input.tell() < end:
+            args.append(self._decode_expression(input))
+            i += 1
+        return nodes.GenericElement(tag, None, args)
 
     def _decode_generic_surrounding_tag(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         if length != 1:
@@ -272,13 +299,32 @@ class XivStringDecoder(object):
         return NotImplemented
 
     def _decode_if(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
-        return NotImplemented
+        end = input.tell() + length
+
+        condition = self._decode_expression(input)
+        true_value, false_value = self._decode_conditional_outputs(input, end)
+
+        return nodes.IfElement(tag, condition, true_value, false_value)
 
     def _decode_if_equals(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         return NotImplemented
 
-    def _decode_conditional_outputs(self, input: io.BytesIO, tag: TagType, length: int) -> Tuple[INode, INode]:
-        return NotImplemented
+    def _decode_conditional_outputs(self, input: io.BytesIO, end: int) -> Tuple[INode, INode]:
+        true_value = None  # type: INode
+        false_value = None  # type: INode
+        exprs = []  # type: List[INode]
+        while input.tell() != end:
+            expr = self._decode_expression(input)
+            exprs.append(expr)
+
+        # Only one instance with more than two expressions (LogMessage.en[1115][4])
+        # Not sure how it should be handled, discarding all but first and second for now.
+        if len(exprs) > 0:
+            true_value = exprs[0]
+        if len(exprs) > 1:
+            false_value = exprs[1]
+
+        return true_value, false_value
 
     def _decode_switch(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         return NotImplemented

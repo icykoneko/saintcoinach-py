@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 from typing import Iterable, List
+from enum import Enum
 
 from ..utils import TagType, StringTokens
 
@@ -25,7 +26,7 @@ class CloseTag(IExpression):
     def __str__(self):
         return "%s%s%s%s" % (StringTokens.TAG_OPEN,
                              StringTokens.ELEMENT_CLOSE,
-                             self.tag,
+                             self.tag.name,
                              StringTokens.TAG_CLOSE)
 
 
@@ -33,15 +34,15 @@ class ExpressionCollection(IExpression):
     @property
     def children(self) -> Iterable[IExpression]: return self.__children
 
-    def __init__(self, *args):
-        if len(args) == 0:
+    def __init__(self, children: Iterable[IExpression]):
+        if children is None:
             self.__children = []  # type: List[IExpression]
         else:
-            self.__children = list(*args)
+            self.__children = list(children)
         self.separator = ''
 
     def __str__(self):
-        return self.separator.join(filter(None, self.children))
+        return self.separator.join(map(str, filter(None, self.children)))
 
 
 class GenericExpression(IValueExpression):
@@ -76,10 +77,10 @@ class OpenTag(IExpression):
             self.__arguments = []  # List[IExpression]
 
     def __str__(self):
-        s = StringTokens.TAG_OPEN + self.tag
+        s = StringTokens.TAG_OPEN + self.tag.name
         if len(self.__arguments) > 0:
             s += StringTokens.ARGUMENTS_OPEN
-            s += StringTokens.ARGUMENTS_SEPARATOR.join(self.__arguments)
+            s += StringTokens.ARGUMENTS_SEPARATOR.join(map(str, self.__arguments))
             s += StringTokens.ARGUMENTS_CLOSE
         s += StringTokens.TAG_CLOSE
         return s
@@ -101,6 +102,14 @@ class SurroundedExpression(IValueExpression):
         self.__suffix = suffix
 
     def __str__(self):
-        return "%s%s%s" % (self.prefix,
-                           self.value,
-                           self.suffix)
+        s = ''
+        if isinstance(self.prefix, Enum):
+            s += self.prefix.name
+        else:
+            s += str(self.prefix)
+        s += str(self.value)
+        if isinstance(self.suffix, Enum):
+            s += self.suffix.name
+        else:
+            s += str(self.suffix)
+        return s

@@ -1,8 +1,9 @@
 from typing import TypeVar, Generic, Type, Union, Iterable, List
 from abc import ABC, abstractmethod
 
-from ..utils import TagType, NodeFlags, StringTokens
+from ..utils import TagType, NodeFlags, StringTokens, DecodeExpressionType
 from .. import expressions
+from .. import evaluation
 
 T = TypeVar('T')
 
@@ -34,7 +35,7 @@ class INode(ABC):
 
 class IExpressionNode(INode):
     @abstractmethod
-    def evaluate(self, parameters: 'EvaluationParameters') -> expressions.IExpression:
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters') -> expressions.IExpression:
         pass
 
 
@@ -75,7 +76,7 @@ class ArgumentCollection(Iterable[INode]):
     def has_items(self): return self.__items is not None and len(self.__items) > 0
 
     def __iter__(self):
-        iter(self.__items)
+        return iter(self.__items)
 
     def __init__(self, items: Iterable[INode]):
         if items is None:
@@ -87,7 +88,7 @@ class ArgumentCollection(Iterable[INode]):
         s = ''
         if self.has_items:
             s += StringTokens.ARGUMENTS_OPEN
-            s += StringTokens.ARGUMENTS_SEPARATOR.join(self)
+            s += StringTokens.ARGUMENTS_SEPARATOR.join(map(str, self))
             s += StringTokens.ARGUMENTS_CLOSE
         return s
 
@@ -105,14 +106,58 @@ class CloseTag(IExpressionNode):
     def __str__(self):
         return "%s%s%s%s" % (StringTokens.TAG_OPEN,
                              StringTokens.ELEMENT_CLOSE,
-                             self.tag,
+                             self.tag.name,
                              StringTokens.TAG_CLOSE)
 
     def accept(self, visitor: INodeVisitor[T]):
         return visitor.visit(self)
 
-    def evaluate(self, parameters: 'EvaluationParameters'):
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters'):
         return expressions.CloseTag(self.tag)
+
+
+class Comparison(IExpressionNode):
+    @property
+    def tag(self): return TagType.none
+
+    @property
+    def flags(self): return NodeFlags.IsExpression
+
+    @property
+    def left(self) -> INode: return self.__left
+
+    @property
+    def comparison_type(self) -> DecodeExpressionType: return self.__comparison_type
+
+    @property
+    def right(self) -> INode: return self.__right
+
+    def __init__(self, comparison_type: DecodeExpressionType, left: INode, right: INode):
+        self.__comparison_type = comparison_type
+        self.__left = left
+        self.__right = right
+
+    def __str__(self):
+        s = ''
+        s += self.comparison_type.name
+        s += StringTokens.ARGUMENTS_OPEN
+        if self.left is not None:
+            s += str(self.left)
+        s += StringTokens.ARGUMENTS_SEPARATOR
+        if self.right is not None:
+            s += str(self.right)
+        s += StringTokens.ARGUMENTS_CLOSE
+        return s
+
+    def accept(self, visitor: INodeVisitor[T]) -> T:
+        return visitor.visit(self)
+
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters') -> expressions.IExpression:
+        return expressions.GenericExpression(
+            parameters.function_provider.compare(parameters,
+                                                 self.comparison_type,
+                                                 self.left,
+                                                 self.right))
 
 
 class DefaultElement(INode):
@@ -132,7 +177,7 @@ class DefaultElement(INode):
     def __str__(self):
         s = ''
         s += StringTokens.TAG_OPEN
-        s += str(self.tag)
+        s += self.tag.name
         if len(self.__data.value) == 0:
             s += StringTokens.ELEMENT_CLOSE
             s += StringTokens.TAG_CLOSE
@@ -141,7 +186,7 @@ class DefaultElement(INode):
             s += str(self.__data)
             s += StringTokens.TAG_OPEN
             s += StringTokens.ELEMENT_CLOSE
-            s += str(self.tag)
+            s += self.tag.name
             s += StringTokens.TAG_CLOSE
         return s
 
@@ -161,7 +206,7 @@ class EmptyElement(INode):
 
     def __str__(self):
         return "%s%s%s%s" % (StringTokens.TAG_OPEN,
-                             str(self.tag),
+                             self.tag.name,
                              StringTokens.ELEMENT_CLOSE,
                              StringTokens.TAG_CLOSE)
 
@@ -188,15 +233,15 @@ class GenericElement(INodeWithChildren, INodeWithArguments, IExpressionNode):
             f |= NodeFlags.HasChildren
         return f
 
-    def __init__(self, tag: TagType, content: INode, *args):
+    def __init__(self, tag: TagType, content: INode, arguments: Iterable[INode]):
         self.__tag = tag
-        self.__arguments = ArgumentCollection(*args)
+        self.__arguments = ArgumentCollection(arguments)
         self.__content = content
 
     def __str__(self):
         s = ''
         s += StringTokens.TAG_OPEN
-        s += str(self.tag)
+        s += self.tag.name
         s += str(self.__arguments)
 
         if self.content is None:
@@ -207,7 +252,7 @@ class GenericElement(INodeWithChildren, INodeWithArguments, IExpressionNode):
             s += str(self.content)
             s += StringTokens.TAG_OPEN
             s += StringTokens.ELEMENT_CLOSE
-            s += str(self.tag)
+            s += self.tag.name
             s += StringTokens.TAG_CLOSE
         return s
 
@@ -216,10 +261,65 @@ class GenericElement(INodeWithChildren, INodeWithArguments, IExpressionNode):
 
     @property
     def children(self):
-        return iter(self.content)
+        yield self.content
 
-    def evaluate(self, parameters: 'EvaluationParameters'):
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters'):
         return parameters.function_provider.evaluate_generic_element(parameters, self)
+
+
+class IfElement(IConditionalNode):
+    @property
+    def tag(self): return self.__tag
+
+    @property
+    def flags(self): return NodeFlags.IsExpression | NodeFlags.IsConditional
+
+    @property
+    def condition(self): return self.__condition
+
+    @property
+    def true_value(self): return self.__true_value
+
+    @property
+    def false_value(self): return self.__false_value
+
+    def __init__(self, tag: TagType, condition: INode, true_value: INode, false_value: INode):
+        if condition is None:
+            raise ValueError('condition')
+        self.__tag = tag
+        self.__condition = condition
+        self.__true_value = true_value
+        self.__false_value = false_value
+
+    def __str__(self):
+        s = StringTokens.TAG_OPEN
+        s += self.tag.name
+        s += StringTokens.ARGUMENTS_OPEN
+        s += str(self.condition)
+        s += StringTokens.ARGUMENTS_CLOSE
+        s += StringTokens.TAG_CLOSE
+
+        if self.true_value is not None:
+            s += str(self.true_value)
+
+        if self.false_value is not None:
+            s += StringTokens.ELSE_TAG
+            s += str(self.false_value)
+
+        s += StringTokens.TAG_OPEN
+        s += StringTokens.ELEMENT_CLOSE
+        s += self.tag.name
+        s += StringTokens.TAG_CLOSE
+        return s
+
+    def accept(self, visitor: INodeVisitor[T]):
+        return visitor.visit(self)
+
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters'):
+        eval_cond = self.condition.evaluate(parameters)
+        if parameters.function_provider.to_boolean(eval_cond):
+            return self.true_value.evaluate(parameters)
+        return self.false_value.evaluate(parameters)
 
 
 class OpenTag(IExpressionNode):
@@ -232,26 +332,58 @@ class OpenTag(IExpressionNode):
     @property
     def arguments(self): return self.__arguments
 
-    def __init__(self, tag: TagType, *args):
+    def __init__(self, tag: TagType, arguments: Iterable[INode]):
         self.__tag = tag
-        self.__arguments = ArgumentCollection(*args)
+        self.__arguments = ArgumentCollection(arguments)
 
     def __str__(self):
         s = StringTokens.TAG_OPEN
-        s += str(self.tag)
+        s += self.tag.name
         s += str(self.__arguments)
         s += StringTokens.TAG_CLOSE
         return s
-        # return "%s%s%s%s" % (StringTokens.TAG_OPEN,
-        #                      self.tag,
-        #                      self.__arguments,
-        #                      StringTokens.TAG_CLOSE)
 
     def accept(self, visitor: INodeVisitor[T]):
         return visitor.visit(self)
 
-    def evaluate(self, parameters: 'EvaluationParameters'):
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters'):
         return expressions.OpenTag(self.tag, [arg.evaluate(parameters) for arg in self.arguments])
+
+
+class Parameter(IExpressionNode):
+    @property
+    def tag(self) -> TagType: return TagType.none
+
+    @property
+    def flags(self) -> NodeFlags: return NodeFlags.IsExpression
+
+    @property
+    def parameter_type(self) -> DecodeExpressionType: return self.__parameter_type
+
+    @property
+    def parameter_index(self) -> INode: return self.__parameter_index
+
+    def __init__(self, parameter_type: DecodeExpressionType, parameter_index: INode):
+        if parameter_type is None:
+            raise ValueError
+        self.__parameter_type = parameter_type
+        self.__parameter_index = parameter_index
+
+    def __str__(self):
+        s = ''
+        s += self.parameter_type.name
+        s += StringTokens.ARGUMENTS_OPEN
+        s += str(self.parameter_index)
+        s += StringTokens.ARGUMENTS_CLOSE
+        return s
+
+    def accept(self, visitor: INodeVisitor[T]) -> T:
+        return visitor.visit(self)
+
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters') -> expressions.IExpression:
+        eval_index = self.parameter_index.evaluate(parameters)
+        index = parameters.function_provider.to_integer(eval_index)
+        return expressions.GenericExpression(parameters[(self.parameter_type, index)])
 
 
 class StaticByteArray(IStaticNode):
@@ -336,5 +468,5 @@ class TopLevelParameter(IExpressionNode):
     def accept(self, visitor: INodeVisitor[T]):
         return visitor.visit(self)
 
-    def evaluate(self, parameters: 'EvaluationParameters'):
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters'):
         return expressions.GenericExpression(parameters.top_level_parameters[self.value])
