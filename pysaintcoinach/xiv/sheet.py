@@ -73,56 +73,56 @@ class XivRow(IXivRow):
     def build_column_name(column: str, *indices: List[int]) -> str:
         return column + ''.join(['[%u]' % i for i in indices])
 
-    def as_image(self, column: str, *indicies: List[int]) -> imaging.ImageFile:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_image(self, column: str, *indices: List[int]) -> imaging.ImageFile:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return cast(imaging.ImageFile, self[column])
 
-    def as_string(self, column: str, *indicies: List[int]) -> text.XivString:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_string(self, column: str, *indices: List[int]) -> text.XivString:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return cast(text.XivString, self[column])
 
-    def as_boolean(self, column: str, *indicies: List[int]) -> bool:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_boolean(self, column: str, *indices: List[int]) -> bool:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return bool(self[column])
 
-    def as_int16(self, column: str, *indicies: List[int]) -> int:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_int16(self, column: str, *indices: List[int]) -> int:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return int(self[column]) & 0xFFFF
 
-    def as_int32(self, column: str, *indicies: List[int]) -> int:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_int32(self, column: str, *indices: List[int]) -> int:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return int(self[column]) & 0xFFFFFFFF
 
-    def as_int64(self, column: str, *indicies: List[int]) -> int:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_int64(self, column: str, *indices: List[int]) -> int:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return int(self[column])
 
-    def as_single(self, column: str, *indicies: List[int]) -> float:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_single(self, column: str, *indices: List[int]) -> float:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return float(self[column])
 
-    def as_double(self, column: str, *indicies: List[int]) -> float:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_double(self, column: str, *indices: List[int]) -> float:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return float(self[column])
 
-    def as_quad(self, column: str, *indicies: List[int]) -> int:
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+    def as_quad(self, column: str, *indices: List[int]) -> int:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return int(self[column])
 
-    def as_T(self, t_cls: Type, column: str = None, *indicies: List[int]) -> object:
+    def as_T(self, t_cls: Type, column: str = None, *indices: List[int]) -> object:
         if column is None:
             column = t_cls.__name__
-        if len(indicies) > 0:
-            column = self.build_column_name(column, *indicies)
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
         return cast(t_cls, self[column])
 
 
