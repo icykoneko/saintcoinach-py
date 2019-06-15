@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, cast
+from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, Any, cast
 
 from ..ex.relational.sheet import IRelationalRow, IRelationalSheet
 from .. import xiv
@@ -26,7 +26,9 @@ class IXivSubRow(IXivRow):
     @abstractmethod
     def parent_key(self) -> int: pass
 
+
 T = TypeVar('T', bound=IXivRow)
+T_cls = TypeVar('T_cls')
 
 
 class IXivSheet(IRelationalSheet[T]):
@@ -58,12 +60,12 @@ class XivRow(IXivRow):
     @property
     def default_value(self): return self.__source_row.default_value
 
-    def __getitem__(self, item: Union[int, str, Tuple]) -> object:
+    def __getitem__(self, item: Union[int, str, Tuple[str, List[int]]]) -> Any:
         if isinstance(item, tuple):
             return self.__source_row[self.build_column_name(item[0], *item[1:])]
         return self.__source_row[item]
 
-    def get_raw(self, column_name: Union[int, str]) -> object:
+    def get_raw(self, column_name: Union[int, str], **kwargs) -> Any:
         return self.__source_row.get_raw(column_name)
 
     @property
@@ -118,7 +120,7 @@ class XivRow(IXivRow):
             column = self.build_column_name(column, *indices)
         return int(self[column])
 
-    def as_T(self, t_cls: Type, column: str = None, *indices: List[int]) -> object:
+    def as_T(self, t_cls: Type[T_cls], column: str = None, *indices: List[int]) -> T_cls:
         if column is None:
             column = t_cls.__name__
         if len(indices) > 0:
@@ -197,6 +199,7 @@ class XivSubRow(XivRow, IXivSubRow):
 
     @property
     def parent_key(self): return self._source_sub_row.parent_row.key
+
 
 T = TypeVar('T', bound=IXivSubRow)
 

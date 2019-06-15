@@ -3,6 +3,8 @@ from pathlib import Path
 from weakref import WeakValueDictionary
 import io
 import logging
+from typing import Iterable as IterableT, Dict
+
 
 class PackIdentifier(object):
     DEFAULT_EXPANSION = "ffxiv"
@@ -106,6 +108,9 @@ class PackCollection(object):
     @property
     def data_directory(self): return self._data_directory
 
+    @property
+    def packs(self) -> 'IterableT[Pack]': return self._packs.values()
+
     def __init__(self, data_directory):
         if isinstance(data_directory, str):
             data_directory = Path(data_directory)
@@ -115,7 +120,7 @@ class PackCollection(object):
         else:
             raise TypeError("data_directory")
         self._data_directory = data_directory
-        self._packs = {}
+        self._packs = {}  # type: Dict[PackIdentifier, Pack]
 
     def file_exists(self, path: str):
         pack = self.get_pack(path)

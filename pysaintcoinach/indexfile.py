@@ -3,9 +3,10 @@ from collections.abc import Iterable
 from weakref import WeakValueDictionary
 import struct
 import zlib
+from typing import Dict, Union, overload
 
-from .pack import Pack
-from .file import FileFactory
+from .pack import Pack, PackIdentifier
+from .file import FileFactory, File
 
 
 def _compute_hash(s):
@@ -98,22 +99,27 @@ class Directory(IPackSource):
 
 
 class IndexDirectory(object):
-    @property
-    def pack_id(self): return self._pack_id
+    """
+    Directory-entry inside an index file.
+    """
 
     @property
-    def key(self): return self._key
+    def pack_id(self) -> PackIdentifier: return self._pack_id
 
     @property
-    def offset(self): return self._offset
+    def key(self) -> int: return self._key
 
     @property
-    def count(self): return self._count
+    def offset(self) -> int: return self._offset
 
     @property
-    def files(self): return self._files
+    def count(self) -> int: return self._count
+
+    @property
+    def files(self) -> Dict[int, 'IndexFile']: return self._files
 
     def __init__(self, pack_id, stream):
+        self._files = {}  # type: Dict[int, 'IndexFile']
         self._pack_id = pack_id
 
         self._read_meta(stream)
@@ -122,8 +128,8 @@ class IndexDirectory(object):
         stream.seek(pos)
 
     def _read_meta(self, stream):
-        self._key, self._offset, len = struct.unpack('<Lll4x', stream.read(16))
-        self._count = int(len / 0x10)
+        self._key, self._offset, _len = struct.unpack('<Lll4x', stream.read(16))
+        self._count = int(_len / 0x10)
 
     def _read_files(self, stream):
         stream.seek(self.offset)
@@ -142,12 +148,12 @@ class IndexDirectory(object):
 
 class IndexSource(IPackSource):
     @property
-    def index(self): return self._index
+    def index(self) -> 'Index': return self._index
 
     @property
-    def pack(self): return self._pack
+    def pack(self) -> Pack: return self._pack
 
-    def __init__(self, pack, index):
+    def __init__(self, pack: Pack, index: 'Index'):
         self._pack = pack
         self._index = index
         self._directories = {}
@@ -156,12 +162,12 @@ class IndexSource(IPackSource):
     def __repr__(self):
         return "IndexSource(pack=%r)" % self.pack
 
-    def directory_exists(self, path_or_key):
+    def directory_exists(self, path_or_key: Union[str, int]) -> bool:
         if isinstance(path_or_key, str):
             path_or_key = _compute_hash(path_or_key)
         return path_or_key in self.index.directories
 
-    def get_directory(self, path_or_key):
+    def get_directory(self, path_or_key: Union[str, int]) -> Directory:
         def from_key(key):
             if key in self._directories:
                 return self._directories[key]
@@ -174,13 +180,13 @@ class IndexSource(IPackSource):
             return directory
 
         if isinstance(path_or_key, str):
-            dir = from_key(_compute_hash(path_or_key))
-            dir.path = path_or_key
-            return dir
+            _dir = from_key(_compute_hash(path_or_key))
+            _dir.path = path_or_key
+            return _dir
         else:
             return from_key(path_or_key)
 
-    def file_exists(self, path: str):
+    def file_exists(self, path: str) -> bool:
         if '/' not in path:
             raise ValueError('path')
 
@@ -189,40 +195,48 @@ class IndexSource(IPackSource):
         base_name = path[last_separator + 1:]
 
         if self.directory_exists(dir_path):
-            dir = self.get_directory(dir_path)
-            return dir.file_exists(base_name)
+            _dir = self.get_directory(dir_path)
+            return _dir.file_exists(base_name)
         return False
 
-    def get_file(self, path: str):
+    def get_file(self, path: str) -> File:
         if '/' not in path:
             raise ValueError('path')
 
         last_separator = path.rindex('/')
         dir_path = path[:last_separator]
         base_name = path[last_separator + 1:]
-        dir = self.get_directory(dir_path)
-        return dir.get_file(base_name)
+        _dir = self.get_directory(dir_path)
+        return _dir.get_file(base_name)
 
-    def get_file_from_keys(self, directory_key, file_key):
-        dir = self.get_directory(directory_key)
-        return dir.get_file(file_key)
+    def get_file_from_keys(self, directory_key: int, file_key: int) -> File:
+        _dir = self.get_directory(directory_key)
+        return _dir.get_file(file_key)
 
     def __iter__(self):
-        for dir in self.index.directories.values():
-            for file in dir.files.values():
-                index = file.index
-                yield self.get_file_from_keys(index.directory_key, index.file_key)
+        from itertools import chain
+        for index in chain.from_iterable(map(lambda x: x.files.values(),
+                                             self.index.directories.values())):
+            try:
+                _file = self.get_file_from_keys(index.directory_key, index.file_key)
+                yield _file
+            except TypeError:
+                continue
 
 
 class Index(object):
-    @property
-    def pack_id(self): return self._pack_id
+    """
+    Class representing the data inside a *.index file.
+    """
 
     @property
-    def header(self): return self._header
+    def pack_id(self) -> PackIdentifier: return self._pack_id
 
     @property
-    def directories(self): return self._directories
+    def header(self) -> 'IndexHeader': return self._header
+
+    @property
+    def directories(self) -> Dict[int, IndexDirectory]: return self._directories
 
     def __init__(self, pack_id, path_or_stream):
         self._pack_id = pack_id
@@ -255,7 +269,7 @@ class Index(object):
         dirs = [IndexDirectory(self.pack_id, stream)
                 for _ in range(self.header.directories_count)]
 
-        self._directories = dict([(dir.key, dir) for dir in dirs])
+        self._directories = dict([(_dir.key, _dir) for _dir in dirs])
 
 
 class IndexHeader(object):
