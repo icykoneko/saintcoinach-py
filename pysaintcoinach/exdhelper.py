@@ -11,11 +11,7 @@ class ExdHelper(object):
         if sheet.header.variant == 1:
             return ExdHelper.convert_rows_core(sheet, language, cols, ExdHelper.get_row_key)
         else:
-            rows = [row for row in sheet.source_row]
-            results = []
-            for parent_row in sorted(rows, key=lambda x: x.key):
-                results += [ExdHelper.convert_rows_core(parent_row.sub_rows, language, cols, ExdHelper.get_sub_row_key)]
-            return results
+            return ExdHelper.convert_rows_core(sheet, language, cols, ExdHelper.get_sub_row_key)
 
     @staticmethod
     def convert_rows_core(rows, language, cols, get_key):
