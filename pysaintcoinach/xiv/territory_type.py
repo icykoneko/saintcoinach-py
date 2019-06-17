@@ -1,9 +1,8 @@
 from ..ex.relational import IRelationalRow
 from . import xivrow, XivRow, IXivSheet
-from . import as_row_type
 
-
-PlaceName = as_row_type('PlaceName')
+from .placename import PlaceName
+from .map import Map
 
 
 @xivrow
@@ -16,7 +15,7 @@ class TerritoryType(XivRow):
     @property
     def bg(self): return self.as_string('Bg')
     @property
-    def map(self): return self['Map']
+    def map(self): return self.as_T(Map)
     @property
     def place_name(self): return self.as_T(PlaceName, 'PlaceName')
     @property
