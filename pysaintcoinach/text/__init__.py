@@ -353,23 +353,26 @@ class XivStringDecoder(object):
 
         if type is None:
             type = _read_byte(input)
+        if isinstance(type, IntegerType):
+            t = type.value
+        else:
+            t = type  # type: int
 
-        t = type  # type: int
         if t < BYTE_LENGTH_CUTOFF:
             return t - 1
 
-        if type == IntegerType.Byte:
+        if t == IntegerType.Byte.value:
             return _read_byte(input)
-        elif type == IntegerType.ByteTimes256:
+        elif t == IntegerType.ByteTimes256.value:
             return _read_byte(input) * 256
-        elif type == IntegerType.Int16:
+        elif t == IntegerType.Int16.value:
             return (_read_byte(input) <<  8) | \
                    (_read_byte(input)      )
-        elif type == IntegerType.Int24:
+        elif t == IntegerType.Int24.value:
             return (_read_byte(input) << 16) | \
                    (_read_byte(input) <<  8) | \
                    (_read_byte(input)      )
-        elif type == IntegerType.Int32:
+        elif t == IntegerType.Int32.value:
             return (_read_byte(input) << 24) | \
                    (_read_byte(input) << 16) | \
                    (_read_byte(input) <<  8) | \

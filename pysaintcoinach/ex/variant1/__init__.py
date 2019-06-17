@@ -57,7 +57,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
 
         col = self.sheet.header.find_column(item)
         if col is None:
-            raise KeyError
+            raise KeyError(item)
         val = self[col.index]
 
         self.__value_references[item] = val
@@ -71,5 +71,5 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
 
         column = self.sheet.header.find_column(column_name)
         if column is None:
-            raise KeyError
+            raise KeyError(column_name)
         return column.read_raw(self.sheet.get_buffer(), self)

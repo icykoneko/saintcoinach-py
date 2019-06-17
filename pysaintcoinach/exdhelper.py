@@ -1,10 +1,11 @@
+from typing import cast
 from .ex.language import Language
 
 
 class ExdHelper(object):
     from .ex import ISheet, IRow, IMultiRow
     @staticmethod
-    def convert_rows(sheet: ISheet, language: Language = None, cols = None):
+    def convert_rows(sheet: ISheet, language: Language = Language.none, cols = None):
         if cols is None:
             cols = sheet.header.columns
 
@@ -22,7 +23,7 @@ class ExdHelper(object):
         return out_rows
 
     @staticmethod
-    def convert_row(row: IRow, language: Language = None):
+    def convert_row(row: IRow, language: Language = Language.none):
         cols = row.sheet.header.columns
         if row.sheet.header.variant == 1:
             get_key = ExdHelper.get_row_key
@@ -38,13 +39,13 @@ class ExdHelper(object):
 
         if isinstance(use_row, IXivRow):
             use_row = row.source_row
-        multi_row = use_row  # type: IMultiRow
+        multi_row = cast(IMultiRow, use_row)
 
         key = get_key(use_row)
         out_row = {}
         for col in cols:
             v = None
-            if language is None or multi_row is None:
+            if language == Language.none or multi_row is None:
                 v = use_row[col.index]
             else:
                 v = multi_row[(col.index, language)]
@@ -61,5 +62,5 @@ class ExdHelper(object):
     @staticmethod
     def get_sub_row_key(row: IRow):
         from .ex import variant2 as Variant2
-        sub_row = row  # type: Variant2.SubRow
+        sub_row = cast(Variant2.SubRow, row)
         return sub_row.full_key
