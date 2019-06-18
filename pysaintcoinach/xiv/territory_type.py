@@ -1,9 +1,6 @@
 from ..ex.relational import IRelationalRow
 from . import xivrow, XivRow, IXivSheet
 
-from .placename import PlaceName
-from .map import Map
-
 
 @xivrow
 class TerritoryType(XivRow):
@@ -12,16 +9,30 @@ class TerritoryType(XivRow):
 
     @property
     def name(self): return self.as_string('Name')
+
     @property
     def bg(self): return self.as_string('Bg')
+
     @property
-    def map(self): return self.as_T(Map)
+    def map(self):
+        from .map import Map
+        return self.as_T(Map)
+
     @property
-    def place_name(self): return self.as_T(PlaceName, 'PlaceName')
+    def place_name(self):
+        from .placename import PlaceName
+        return self.as_T(PlaceName, 'PlaceName')
+
     @property
-    def region_place_name(self): return self.as_T(PlaceName, 'PlaceName{Region}')
+    def region_place_name(self):
+        from .placename import PlaceName
+        return self.as_T(PlaceName, 'PlaceName{Region}')
+
     @property
-    def zone_place_name(self): return self.as_T(PlaceName, 'PlaceName{Zone}')
+    def zone_place_name(self):
+        from .placename import PlaceName
+        return self.as_T(PlaceName, 'PlaceName{Zone}')
+
     @property
     def weather_rate(self):
         if self._weather_rate is not None:

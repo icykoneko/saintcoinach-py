@@ -4,11 +4,7 @@ from itertools import dropwhile
 
 from ..ex.relational import IRelationalRow
 from . import xivrow, XivRow, IXivSheet
-from . import as_row_type
 from ..eorzeadatetime import EorzeaDateTime
-
-
-Weather = as_row_type('Weather')
 
 
 @xivrow
@@ -16,14 +12,15 @@ class WeatherRate(XivRow):
     WEATHER_CHANGE_INTERVAL = timedelta(hours=8)
 
     @property
-    def possible_weathers(self) -> Iterable[Weather]:
+    def possible_weathers(self) -> 'Iterable[Weather]':
         return self._possible_weathers
 
     @property
-    def weather_rates(self) -> Iterable[Tuple[int, Weather]]:
+    def weather_rates(self) -> 'Iterable[Tuple[int, Weather]]':
         return self._weather_rates
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
+        from .weather import Weather
         super(WeatherRate, self).__init__(sheet, source_row)
 
         count = 8
@@ -44,7 +41,7 @@ class WeatherRate(XivRow):
         self._possible_weathers = list(set(w))
         self._weather_rates = wr
 
-    def forecast(self, time: EorzeaDateTime) -> Weather:
+    def forecast(self, time: EorzeaDateTime) -> 'Weather':
         def calc_target(time):
             # Generate a number between [0..99] based on time.
             # Convert the Eorzea date/time into Unix Time.

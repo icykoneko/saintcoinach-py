@@ -3,10 +3,6 @@ from . import xivrow, XivRow, IXivSheet, IXivRow
 from .interfaces import ILocation
 
 
-from .map import Map
-from .placename import PlaceName
-
-
 @xivrow
 class Level(XivRow, ILocation):
     @property
@@ -37,10 +33,12 @@ class Level(XivRow, ILocation):
     def object(self) -> IXivRow: return self.as_T(IXivRow, 'Object')
 
     @property
-    def map(self) -> Map: return self.as_T(Map)
+    def map(self) -> 'Map':
+        from .map import Map
+        return self.as_T(Map)
 
     @property
-    def place_name(self) -> PlaceName: return self.map.place_name
+    def place_name(self) -> 'PlaceName': return self.map.place_name
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(Level, self).__init__(sheet, source_row)
