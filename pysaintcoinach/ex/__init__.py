@@ -5,4 +5,3 @@ from .language import Language
 from .header import Header
 from .column import Column
 from .excollection import ExCollection
-from .viewcollection import ViewCollection

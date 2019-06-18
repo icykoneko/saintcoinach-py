@@ -5,7 +5,6 @@ import io
 from copy import copy
 import operator
 import itertools
-import yaml
 import json
 
 
@@ -43,7 +42,7 @@ class IDataDefinition(object):
         pass
 
 
-class PositionedDataDefinition(yaml.YAMLObject):
+class PositionedDataDefinition(object):
     @property
     def inner_definition(self) -> IDataDefinition:
         return self.__inner_definition
@@ -73,16 +72,10 @@ class PositionedDataDefinition(yaml.YAMLObject):
             self.index,
             self.inner_definition)
 
-    def __getstate__(self):
-        return {'Index': self.index,
-                'InnerDefinition': self.inner_definition}
-
-    def __setstate__(self, state):
-        self.index = state.get('Index', 0)
-        self.inner_definition = state.get('InnerDefinition', None)
-
     def __copy__(self):
-        clone = PositionedDataDefinition(self.index, copy(self.inner_definition))
+        clone = PositionedDataDefinition(
+            index=self.index,
+            inner_definition=copy(self.inner_definition))
         return clone
 
     def convert(self, row, value, index):
@@ -131,9 +124,7 @@ class PositionedDataDefinition(yaml.YAMLObject):
         self.inner_definition.resolve_references(sheet_def)
 
 
-class GroupDataDefinition(yaml.YAMLObject, IDataDefinition):
-    yaml_tag = u'tag:yaml.org,2002:group_def'
-
+class GroupDataDefinition(IDataDefinition):
     @property
     def members(self) -> List[IDataDefinition]:
         return self.__members
@@ -159,12 +150,6 @@ class GroupDataDefinition(yaml.YAMLObject, IDataDefinition):
         return "%s(Members=%r)" % (
             self.__class__.__name__,
             self.members)
-
-    def __getstate__(self):
-        return {'Members': self.members}
-
-    def __setstate__(self, state):
-        self.members = state.get('Members', [])
 
     def convert(self, row: 'IDataRow', value: object, index: int):
         if index < 0 or index >= len(self):
@@ -243,9 +228,7 @@ class GroupDataDefinition(yaml.YAMLObject, IDataDefinition):
             member.resolve_references(sheet_def)
 
 
-class RepeatDataDefinition(yaml.YAMLObject, IDataDefinition):
-    yaml_tag = u'tag:yaml.org,2002:repeat_def'
-
+class RepeatDataDefinition(IDataDefinition):
     @property
     def naming_offset(self):
         return self.__naming_offset
@@ -284,16 +267,6 @@ class RepeatDataDefinition(yaml.YAMLObject, IDataDefinition):
             self.naming_offset,
             self.repeat_count,
             self.repeated_definition)
-
-    def __getstate__(self):
-        return {'NamingOffset': self.naming_offset,
-                'RepeatCount': self.repeat_count,
-                'RepeatedDefinition': self.repeated_definition}
-
-    def __setstate__(self, state):
-        self.naming_offset = state.get('NamingOffset', 0)
-        self.repeat_count = state.get('RepeatCount', 0)
-        self.repeated_definition = state.get('RepeatedDefinition', None)
 
     def __copy__(self):
         return RepeatDataDefinition(self.naming_offset,
@@ -348,9 +321,7 @@ class RepeatDataDefinition(yaml.YAMLObject, IDataDefinition):
         self.repeated_definition.resolve_references(sheet_def)
 
 
-class SingleDataDefinition(yaml.YAMLObject, IDataDefinition):
-    yaml_tag = u'tag:yaml.org,2002:single_def'
-
+class SingleDataDefinition(IDataDefinition):
     @property
     def name(self):
         return self.__name
@@ -379,20 +350,6 @@ class SingleDataDefinition(yaml.YAMLObject, IDataDefinition):
             self.__class__.__name__,
             self.name,
             self.converter)
-
-    def __getstate__(self):
-        return {'Name': self.name,
-                'Converter': self.converter}
-
-    def __setstate__(self, state):
-        self.name = state.get('Name', None)
-        self.converter = state.get('Converter', None)
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        return dumper.represent_mapping(dumper.DEFAULT_MAPPING_TAG,
-                                        data.__getstate__(),
-                                        flow_style=None)
 
     def to_json(self):
         obj = OrderedDict()
@@ -476,9 +433,7 @@ class DataDefinitionSerializer(object):
             raise ValueError("Invalid definition type.")
 
 
-class SheetDefinition(yaml.YAMLObject):
-    yaml_tag = u'SheetDefinition'
-
+class SheetDefinition(object):
     @property
     def data_definitions(self) -> List[PositionedDataDefinition]:
         return self.__data_definitions
@@ -537,38 +492,6 @@ class SheetDefinition(yaml.YAMLObject):
             self.default_column,
             self.is_generic_reference_target)
 
-    def __getstate__(self):
-        return {'DataDefinitions': self.data_definitions,
-                'Name': self.name,
-                'DefaultColumn': self.default_column,
-                'IsGenericReferenceTarget': self.is_generic_reference_target}
-
-    def __setstate__(self, state):
-        self.__column_definition_map = {}  # type: Dict[int, PositionedDataDefinition]
-        self.__column_name_to_index_map = {}  # type: Dict[str, int]
-        self.__column_index_to_name_map = {}  # type: Dict[int, str]
-        self.__column_value_type_names = {}  # type: Dict[int, str]
-        self.__column_value_types = {}  # type: Dict[int, type]
-        self.__default_column_index = None
-        self.__is_compiled = False
-
-        data_definitions = state.get('DataDefinitions', [])
-        self.data_definitions = []
-        for data_definition in data_definitions:
-            o = PositionedDataDefinition()
-            o.__setstate__(data_definition)
-            self.data_definitions += [o]
-
-        self.name = state.get('Name', None)
-        self.default_column = state.get('DefaultColumn', None)
-        self.is_generic_reference_target = state.get('IsGenericReferenceTarget', False)
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        return dumper.represent_mapping(dumper.DEFAULT_MAPPING_TAG,
-                                        data.__getstate__(),
-                                        flow_style=None)
-
     def to_json(self) -> OrderedDict:
         obj = OrderedDict()
         obj['sheet'] = self.name
@@ -600,7 +523,7 @@ class SheetDefinition(yaml.YAMLObject):
         self.__column_value_types = {}
         self.data_definitions.sort(key=operator.attrgetter('index'))
         for _def in self.data_definitions:
-            for i in range(_def.index):
+            for i in range(len(_def)):
                 offset = _def.index + i
                 self.__column_definition_map[offset] = _def
 
@@ -615,7 +538,7 @@ class SheetDefinition(yaml.YAMLObject):
 
     def get_definition(self, index) -> PositionedDataDefinition:
         if self.__is_compiled:
-            return self.__column_definition_map[index]
+            return self.__column_definition_map.get(index, None)
 
         res = filter(lambda d: d.index <= index < (d.index + len(d)), self.data_definitions)
         return next(res, None)
@@ -670,9 +593,7 @@ class SheetDefinition(yaml.YAMLObject):
         return _def.convert(row, value, index) if _def is not None else value
 
 
-class RelationDefinition(yaml.YAMLObject):
-    yaml_tag = u'RelationDefinition'
-
+class RelationDefinition(object):
     @property
     def sheet_definitions(self) -> List[SheetDefinition]:
         return self.__sheet_definitions
@@ -689,11 +610,11 @@ class RelationDefinition(yaml.YAMLObject):
     def version(self, value):
         self.__version = value
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.__is_compiled = False
         self.__sheet_definitions = []  # type: List[SheetDefinition]
         self.__sheet_map = {}  # type: Dict[str, SheetDefinition]
-        self.__version = None
+        self.__version = kwargs.get('version', None)  # type: str
 
     def __repr__(self):
         return "%s(SheetDefinitions=%r, Version=%r)" % (
@@ -740,48 +661,6 @@ class RelationDefinition(yaml.YAMLObject):
         #return json.loads(s, object_pairs_hook=SheetDefinition.from_json)
         obj = json.load(fp)
         return RelationDefinition.from_json(obj)
-
-    def serialize(self, stream_or_path: Union[io.TextIOBase, str]):
-        def with_stream(stream):
-            yaml.dump(self, stream)
-
-        if isinstance(stream_or_path, str):
-            with open(stream_or_path, "w", encoding="utf-8") as stream:
-                with_stream(stream)
-        else:
-            with_stream(stream_or_path)
-
-    def deserialize(self, stream_or_path: Union[io.TextIOBase, str]):
-        def with_stream(stream):
-            yaml.load(stream)
-
-        if isinstance(stream_or_path, str):
-            with open(stream_or_path, "r", encoding="utf-8") as stream:
-                with_stream(stream)
-        else:
-            with_stream(stream_or_path)
-
-    def __setstate__(self, state):
-        sheet_definitions = state.get('SheetDefinitions', [])
-        # Need to convert each record into objects...
-        self.sheet_definitions = []
-        for sheet_definition in sheet_definitions:
-            o = SheetDefinition()
-            o.__setstate__(sheet_definition)
-            self.sheet_definitions += [o]
-        self.version = state.get('Version', None)
-        self.__is_compiled = False
-
-    def __getstate__(self):
-        # Save only the serializable properties
-        return {'SheetDefinitions': self.sheet_definitions,
-                'Version': self.version}
-
-    @classmethod
-    def to_yaml(cls, dumper, data):
-        return dumper.represent_mapping(dumper.DEFAULT_MAPPING_TAG,
-                                        data.__getstate__(),
-                                        flow_style=None)
 
 
 class ViewColumnDefinition(object):

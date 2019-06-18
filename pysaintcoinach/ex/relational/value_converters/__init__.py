@@ -1,5 +1,4 @@
 from typing import List, Dict
-import yaml
 import json
 from collections import OrderedDict
 
@@ -11,9 +10,7 @@ from .complexlinkconverter import ComplexLinkConverter
 from ..definition import SheetDefinition
 
 
-class ColorConverter(IValueConverter, yaml.YAMLObject):
-    yaml_tag = u'tag:yaml.org,2002:color_conv'
-
+class ColorConverter(IValueConverter):
     @property
     def includes_alpha(self) -> bool:
         return self.__includes_alpha
@@ -38,12 +35,6 @@ class ColorConverter(IValueConverter, yaml.YAMLObject):
             self.__class__.__name__,
             self.includes_alpha)
 
-    def __getstate__(self):
-        return {'IncludesAlpha': self.includes_alpha}
-
-    def __setstate__(self, state):
-        self.includes_alpha = state.get('IncludesAlpha')
-
     def convert(self, row: IDataRow, raw_value: object):
         argb = int(raw_value, 16)
         if not self.includes_alpha:
@@ -64,9 +55,7 @@ class ColorConverter(IValueConverter, yaml.YAMLObject):
         return
 
 
-class GenericReferenceConverter(IValueConverter, yaml.YAMLObject):
-    yaml_tag = u'tag:yaml.org,2002:ref_conv'
-
+class GenericReferenceConverter(IValueConverter):
     @property
     def target_type_name(self):
         return 'Row'
@@ -77,12 +66,6 @@ class GenericReferenceConverter(IValueConverter, yaml.YAMLObject):
 
     def __repr__(self):
         return "%s()" % (self.__class__.__name__)
-
-    def __getstate__(self):
-        return {}
-
-    def __setstate__(self, state):
-        pass
 
     def convert(self, row: IDataRow, raw_value: object):
         coll = row.sheet.collection
@@ -102,9 +85,7 @@ class GenericReferenceConverter(IValueConverter, yaml.YAMLObject):
         return
 
 
-class IconConverter(IValueConverter, yaml.YAMLObject):
-    yaml_tag = u'tag:yaml.org,2002:icon_conv'
-
+class IconConverter(IValueConverter):
     @property
     def target_type_name(self):
         return 'Image'
@@ -115,12 +96,6 @@ class IconConverter(IValueConverter, yaml.YAMLObject):
 
     def __repr__(self):
         return "%s()" % (self.__class__.__name__)
-
-    def __getstate__(self):
-        return {}
-
-    def __setstate__(self, state):
-        pass
 
     def convert(self, row: IDataRow, raw_value: object):
         from .... import imaging
@@ -145,9 +120,7 @@ class IconConverter(IValueConverter, yaml.YAMLObject):
         return
 
 
-class MultiReferenceConverter(IValueConverter, yaml.YAMLObject):
-    yaml_tag = u'tag:yaml.org,2002:multiref_conv'
-
+class MultiReferenceConverter(IValueConverter):
     @property
     def targets(self) -> List[str]: return self.__targets
 
@@ -164,12 +137,6 @@ class MultiReferenceConverter(IValueConverter, yaml.YAMLObject):
         return "%s(Targets=%r)" % (
             self.__class__.__name__,
             self.targets)
-
-    def __getstate__(self):
-        return {'Targets': self.targets}
-
-    def __setstate__(self, state):
-        self.targets = state.get('Targets', [])
 
     def convert(self, row: IDataRow, raw_value: object):
         key = int(raw_value)
@@ -223,9 +190,7 @@ class QuadConverter(IValueConverter):
         return
 
 
-class SheetLinkConverter(IValueConverter, yaml.YAMLObject):
-    yaml_tag = u'tag:yaml.org,2002:link_conv'
-
+class SheetLinkConverter(IValueConverter):
     @property
     def target_sheet(self) -> str: return self.__target_sheet
 
@@ -242,12 +207,6 @@ class SheetLinkConverter(IValueConverter, yaml.YAMLObject):
         return "%s(TargetSheet=%r)" % (
             self.__class__.__name__,
             self.target_sheet)
-
-    def __getstate__(self):
-        return {'TargetSheet': self.target_sheet}
-
-    def __setstate__(self, state):
-        self.target_sheet = state.get('TargetSheet', None)
 
     def convert(self, row: IDataRow, raw_value: object):
         coll = row.sheet.collection
@@ -275,10 +234,8 @@ class SheetLinkConverter(IValueConverter, yaml.YAMLObject):
         return
 
 
-class TomestoneOrItemReferenceConverter(IValueConverter, yaml.YAMLObject):
+class TomestoneOrItemReferenceConverter(IValueConverter):
     from .... import xiv
-
-    yaml_tag = u'tag:yaml.org,2002:tomestone_item_conv'
 
     __tomestone_key_by_reward_index = None  # type: Dict[int, xiv.IXivRow]
 
@@ -292,12 +249,6 @@ class TomestoneOrItemReferenceConverter(IValueConverter, yaml.YAMLObject):
 
     def __repr__(self):
         return "%s()" % (self.__class__.__name__)
-
-    def __getstate__(self):
-        return {}
-
-    def __setstate__(self, state):
-        pass
 
     def convert(self, row: IDataRow, raw_value: object):
         if self.__tomestone_key_by_reward_index is None:

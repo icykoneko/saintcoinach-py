@@ -1,14 +1,17 @@
 from pathlib import Path
 import json
-import os, sys
+import os
+import logging
 
 try:
     _SCRIPT_PATH = os.path.abspath(__path__)
 except:
     _SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-from .ex import Language, ViewCollection
-from .ex.relational.definition import RelationDefinition
+_SAINTCOINACH_HOME = Path(_SCRIPT_PATH, '..', 'SaintCoinach', 'SaintCoinach')
+
+from .ex import Language
+from .ex.relational.definition import RelationDefinition, SheetDefinition
 from .xiv import XivCollection
 from .pack import PackCollection
 from .indexfile import Directory
@@ -19,8 +22,11 @@ __all__ = ['ARealmReversed']
 
 
 class ARealmReversed(object):
-    _DEFINITION_FILE = 'ex.json'
-    _VIEW_DEFINITION_FILE = 'exview.json'
+    """
+    Central class for accessing game assets.
+    """
+
+    """File name containing the current version string."""
     _VERSION_FILE = 'ffxivgame.ver'
 
     @property
@@ -41,24 +47,34 @@ class ARealmReversed(object):
     @property
     def is_current_version(self): return self.game_version == self.definition_version
 
-    @property
-    def views(self): return self._views
-
     def __init__(self, game_path: str, language: Language):
         self._game_directory = Path(game_path)
         self._packs = PackCollection(self._game_directory.joinpath('game', 'sqpack'))
         self._game_data = XivCollection(self._packs)
         self._game_data.active_language = language
+
         self._game_version = self._game_directory.joinpath('game', 'ffxivgame.ver').read_text()
-        #self._views = self._read_view_collection()
+        self._game_data.definition = self.__read_definition()
 
-        with open(os.path.join(_SCRIPT_PATH, self._DEFINITION_FILE), 'r', encoding='utf-8') as f:
-            self._game_data.definition = RelationDefinition.from_json_fp(f)
+        self._game_data.definition.compile()
 
-    def _read_view_collection(self):
-        view_file = Path(_SCRIPT_PATH, self._VIEW_DEFINITION_FILE)
-        with view_file.open(encoding='utf-8-sig') as f:
-            return ViewCollection.from_json(json.load(f))
+    def __read_definition(self) -> RelationDefinition:
+        version_path = _SAINTCOINACH_HOME.joinpath('Definitions', 'game.ver')
+        if not version_path.exists():
+            raise RuntimeError('Definitions\\game.ver must exist.')
+
+        version = version_path.read_text().strip()
+        _def = RelationDefinition(version=version)
+        for sheet_file_name in _SAINTCOINACH_HOME.joinpath('Definitions').glob('*.json'):
+            _json = sheet_file_name.read_text(encoding='utf-8-sig')
+            obj = json.loads(_json)
+            sheet_def = SheetDefinition.from_json(obj)
+            _def.sheet_definitions.append(sheet_def)
+
+            if not self._game_data.sheet_exists(sheet_def.name):
+                logging.warning('Defined sheet {} is missing', sheet_def.name)
+
+        return _def
 
 
 # This is an example of how to use this library.
@@ -68,6 +84,7 @@ class ARealmReversed(object):
 def get_default_xiv():
     from . import text
     _string_decoder = text.XivStringDecoder.default()
+
     # Override the tag decoder for emphasis so it doesn't produce tags in string...
     def omit_tag_decoder(i, t, l):
         text.XivStringDecoder.get_integer(i)
