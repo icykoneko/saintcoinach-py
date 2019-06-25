@@ -1,4 +1,20 @@
 from abc import abstractmethod
+from typing import Iterable
+
+
+class IItemSource(object):
+    """
+    Interface for objects from which `Item`s can be obtained.
+    """
+
+    @property
+    @abstractmethod
+    def items(self) -> 'Iterable[Item]':
+        """
+        Gets the `Item`s that can be obtained from the current object.
+        :return: The `Item`s that can be obtained from the current object.
+        """
+        pass
 
 
 class ILocation(object):
@@ -19,4 +35,19 @@ class ILocation(object):
     @property
     @abstractmethod
     def place_name(self) -> 'PlaceName':
+        pass
+
+
+class ILocatable(object):
+    """
+    Interface for objects that have specific locations.
+    """
+
+    @property
+    @abstractmethod
+    def locations(self) -> Iterable[ILocation]:
+        """
+        Gets the locations of the current object.
+        :return: The locations of the current object.
+        """
         pass
