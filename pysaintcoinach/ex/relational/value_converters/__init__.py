@@ -36,7 +36,7 @@ class ColorConverter(IValueConverter):
             self.includes_alpha)
 
     def convert(self, row: IDataRow, raw_value: object):
-        argb = int(raw_value, 16)
+        argb = raw_value  # type: int
         if not self.includes_alpha:
             argb = (argb | 0xFF000000)
 

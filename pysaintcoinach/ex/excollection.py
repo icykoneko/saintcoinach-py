@@ -37,7 +37,12 @@ class ExCollection(object):
 
     def __init__(self, pack_collection: PackCollection):
         self._sheet_identifiers = {}
-        self._sheets = WeakValueDictionary()
+        # NOTE: Making _sheets a WeakValueDictionary will greatly slow down
+        # relational accesses to a sheet, especially when iterating rows with
+        # several related sheets. Unfortunately, Python's GC is a bit too eager
+        # to finalize these technically dead references, even though they'll
+        # likely be requested again soon (just in a separate scope...)
+        self._sheets = dict()
         self._available_sheets = set()
         self._pack_collection = pack_collection
 

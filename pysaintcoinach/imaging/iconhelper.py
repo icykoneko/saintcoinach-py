@@ -28,7 +28,12 @@ class IconHelper(object):
             file = pack.get_file(file_path)
         except:
             if file is None and len(type) > 0:
+                # Couldn't get specific type, try for generic version.
                 file_path = IconHelper.ICON_FILE_FORMAT.format(int(nr / 1000), '', nr)
-                file = pack.get_file(file_path)
+                try:
+                    file = pack.get_file(file_path)
+                except:
+                    # Couldn't get generic version either, that's a shame :(
+                    pass
 
         return cast(imaging.ImageFile, file)
