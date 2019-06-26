@@ -29,7 +29,8 @@ class PackIdentifier(object):
 
     EXPANSION_TO_KEY_MAP = {"ffxiv": 0x00,
                             "ex1": 0x01,
-                            "ex2": 0x02,}
+                            "ex2": 0x02,
+                            "ex3": 0x03}
 
     KEY_TO_EXPANSION_MAP = dict([(v, k) for (k, v) in EXPANSION_TO_KEY_MAP.items()])
 
