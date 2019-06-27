@@ -9,6 +9,8 @@ from .nodes import INode, IExpressionNode, INodeWithChildren
 from .expressions import ExpressionCollection
 
 
+VALID_TAGS = list(map(lambda x: x.value, TagType.__members__.values()))
+
 @total_ordering
 class XivString(IExpressionNode, INodeWithChildren):
     @property
@@ -129,11 +131,15 @@ class XivStringDecoder(object):
         self.set_decoder(TagType.Dash.value, lambda i,t,l: nodes.StaticString(self.dash))
         self.set_decoder(TagType.Emphasis.value, self._decode_generic_surrounding_tag)
         self.set_decoder(TagType.Emphasis2.value, self._decode_generic_surrounding_tag)
-
+        # TODO: Fixed
+        self.set_decoder(TagType.Format.value, self._decode_format)
+        self.set_decoder(TagType.Gui.value, lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
+        self.set_decoder(TagType.Highlight.value, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.If.value, self._decode_if)
-
+        self.set_decoder(TagType.IfEquals.value, self._decode_if_equals)
+        # Indent
+        self.set_decoder(TagType.InstanceContent.value, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.LineBreak.value, lambda i,t,l: nodes.StaticString(self.new_line))
-
         # Sheets
         # Sheet name, Row[, Column[, Parameters]+]
         self.set_decoder(TagType.Sheet.value,
@@ -147,7 +153,11 @@ class XivStringDecoder(object):
                          lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 3, 0x7fffffff))
         self.set_decoder(TagType.SheetJa.value,
                          lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 3, 0x7fffffff))
-
+        self.set_decoder(TagType.Split.value, lambda i,t,l: self._decode_generic_element(i, t, l, 3, False))
+        self.set_decoder(TagType.Switch.value, self._decode_switch)
+        self.set_decoder(TagType.Time.value, lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
+        self.set_decoder(TagType.TwoDigitValue, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
+        # Unknowns
         self.set_decoder(TagType.Value.value,
                          lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.ZeroPaddedValue.value, self._decode_zero_padded_value)
@@ -188,6 +198,8 @@ class XivStringDecoder(object):
         tag = _read_byte(input)
         length = self._get_integer(input)
         end = input.tell() + length
+        if tag not in VALID_TAGS:
+            raise ValueError('Unknown TagType: 0x%02X' % tag)
         tag = TagType(tag)
         decoder = None  # type: 'TagDecoder'
         decoder = self.__tag_decoders.get(tag.value, self.default_tag_decoder)
@@ -304,13 +316,23 @@ class XivStringDecoder(object):
         raise RuntimeError('Invalid data')
 
     def _decode_zero_padded_value(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
-        return NotImplemented
+        val = self._decode_expression(input)
+        arg = self._decode_expression(input)
+        return nodes.GenericElement(tag, val, [arg])
 
     def _decode_color(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
-        return NotImplemented
+        t = _read_byte(input)
+        if length == 1 and t == 0xEC:
+            return nodes.CloseTag(tag)
+        color = self._decode_expression(input, t)
+        return nodes.OpenTag(tag, [color])
 
     def _decode_format(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
-        return NotImplemented
+        end = input.tell() + length
+
+        arg1 = self._decode_expression(input)
+        arg2 = nodes.StaticByteArray(input.read(end - input.tell()))
+        return nodes.GenericElement(tag, None, [arg1, arg2])
 
     def _decode_if(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         end = input.tell() + length
@@ -321,7 +343,13 @@ class XivStringDecoder(object):
         return nodes.IfElement(tag, condition, true_value, false_value)
 
     def _decode_if_equals(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
-        return NotImplemented
+        end = input.tell() + length
+
+        left = self._decode_expression(input)
+        right = self._decode_expression(input)
+        true_value, false_value = self._decode_conditional_outputs(input, end)
+
+        return nodes.IfEqualsElement(tag, left, right, true_value, false_value)
 
     def _decode_conditional_outputs(self, input: io.BytesIO, end: int) -> Tuple[INode, INode]:
         true_value = None  # type: INode
@@ -341,7 +369,16 @@ class XivStringDecoder(object):
         return true_value, false_value
 
     def _decode_switch(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
-        return NotImplemented
+        end = input.tell() + length
+        case_switch = self._decode_expression(input)
+
+        cases = dict()  # type: Dict[int, INode]
+        i = 1
+        while input.tell() < end:
+            cases[i] = self._decode_expression(input)
+            i += 1
+
+        return nodes.SwitchElement(tag, case_switch, cases)
 
     @staticmethod
     def get_integer(input: io.BytesIO, type: IntegerType = None) -> int:

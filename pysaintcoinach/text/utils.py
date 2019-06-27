@@ -83,6 +83,7 @@ class TagType(Enum):
     Value = 0x20
     Format = 0x22
     TwoDigitValue = 0x24
+    Unknown26 = 0x26
     Sheet = 0x28
     Highlight = 0x29
     Clickable = 0x2B
@@ -98,4 +99,5 @@ class TagType(Enum):
     UIForeground = 0x48
     UIGlow = 0x49
     ZeroPaddedValue = 0x50
+    Unknown51 = 0x51
     Unknown60 = 0x60

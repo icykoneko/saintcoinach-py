@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Type, Union, Iterable, List
+from typing import TypeVar, Generic, Type, Union, Iterable, List, Dict
 from abc import ABC, abstractmethod
 
 from ..utils import TagType, NodeFlags, StringTokens, DecodeExpressionType
@@ -322,6 +322,13 @@ class IfElement(IConditionalNode):
         return self.false_value.evaluate(parameters)
 
 
+class IfEqualsElement(IfElement):
+    def __init__(self, tag: TagType, left_value: INode, right_value: INode, true_value: INode, false_value: INode):
+        super(IfEqualsElement, self).__init__(tag,
+                                              Comparison(DecodeExpressionType.Equal, left_value, right_value),
+                                              true_value, right_value)
+
+
 class OpenTag(IExpressionNode):
     @property
     def tag(self): return self.__tag
@@ -444,6 +451,69 @@ class StaticString(IStaticNode):
 
     def accept(self, visitor: INodeVisitor[T]):
         return visitor.visit(self)
+
+
+class SwitchElement(IExpressionNode):
+    @property
+    def tag(self) -> TagType: return self.__tag
+
+    @property
+    def flags(self) -> NodeFlags: return NodeFlags.IsExpression
+
+    @property
+    def case_switch(self) -> INode: return self.__case_switch
+
+    @property
+    def cases(self) -> Dict[int, INode]: return self.__cases
+
+    def __init__(self, tag: TagType, case_switch: INode, cases: Dict[int, INode]):
+        if case_switch is None:
+            raise ValueError('case_switch')
+        if cases is None:
+            raise ValueError('cases')
+        self.__tag = tag
+        self.__case_switch = case_switch
+        self.__cases = dict(cases)
+
+    def __str__(self):
+        s = ''
+        s += StringTokens.TAG_OPEN
+        s += self.tag.name
+        s += StringTokens.ARGUMENTS_OPEN
+        s += str(self.case_switch)
+        s += StringTokens.ARGUMENTS_CLOSE
+        s += StringTokens.TAG_CLOSE
+
+        for key, value in self.cases.items():
+            s += StringTokens.TAG_OPEN
+            s += StringTokens.CASE_TAG_NAME
+            s += StringTokens.ARGUMENTS_OPEN
+            s += str(key)
+            s += StringTokens.ARGUMENTS_CLOSE
+            s += StringTokens.TAG_CLOSE
+
+            s += str(value)
+
+            s += StringTokens.TAG_OPEN
+            s += StringTokens.ELEMENT_CLOSE
+            s += StringTokens.CASE_TAG_NAME
+            s += StringTokens.TAG_CLOSE
+
+        s += StringTokens.TAG_OPEN
+        s += StringTokens.ELEMENT_CLOSE
+        s += self.tag.name
+        s += StringTokens.TAG_CLOSE
+        return s
+
+    def accept(self, visitor: INodeVisitor[T]) -> T:
+        return visitor.visit(self)
+
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters') -> expressions.IExpression:
+        eval_switch = self.case_switch.evaluate(parameters)
+        as_int = parameters.function_provider.to_integer(eval_switch)
+
+        case_node = self.__cases[as_int]
+        return case_node.evaluate(parameters)
 
 
 class TopLevelParameter(IExpressionNode):
