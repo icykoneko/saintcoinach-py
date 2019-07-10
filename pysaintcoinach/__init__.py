@@ -72,7 +72,7 @@ class ARealmReversed(object):
             _def.sheet_definitions.append(sheet_def)
 
             if not self._game_data.sheet_exists(sheet_def.name):
-                logging.warning('Defined sheet {} is missing', sheet_def.name)
+                logging.warning('Defined sheet %s is missing', sheet_def.name)
 
         return _def
 

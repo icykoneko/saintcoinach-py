@@ -6,6 +6,9 @@ import logging
 from typing import Iterable as IterableT, Dict
 
 
+logger = logging.getLogger(__name__)
+
+
 class PackIdentifier(object):
     DEFAULT_EXPANSION = "ffxiv"
 
@@ -221,7 +224,7 @@ class Pack(Iterable):
 
         if self.keep_in_memory:
             if dat_file not in self._buffers:
-                logging.info('Reading: %s' % full_path)
+                logger.info('Reading: %s' % full_path)
                 self._buffers[dat_file] = full_path.read_bytes()
             stream = io.BufferedReader(self._buffers[dat_file])
         else:

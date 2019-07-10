@@ -7,6 +7,9 @@ import weakref
 import logging
 
 
+logger = logging.getLogger(__name__)
+
+
 class FileType(Enum):
     Unknown = 0
     Empty = 1
@@ -207,7 +210,7 @@ class FileDefault(File):
         if self._buffer_cache is not None:
             return self._buffer_cache
 
-        logging.info('Getting data for: %s' % self.path)
+        logger.info('Getting data for: %s' % self.path)
         buffer = self.__read()
 
         self._buffer_cache = buffer
