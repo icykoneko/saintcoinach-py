@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from weakref import WeakValueDictionary
 import struct
 import zlib
-from typing import Dict, Union, overload
+from typing import Dict, Union, Iterator
 
 from .pack import Pack, PackIdentifier
 from .file import FileFactory, File
@@ -33,15 +33,19 @@ class IIndexFile(ABC):
 
 class IPackSource(Iterable):
     @abstractmethod
-    def file_exists(self, path):
+    def file_exists(self, path) -> bool:
         pass
 
     @abstractmethod
-    def get_file(self, path):
+    def get_file(self, path) -> File:
         pass
 
 
 class Directory(IPackSource):
+    """
+    Directory inside a SqPack.
+    """
+
     @property
     def pack(self) -> Pack: return self._pack
 
@@ -58,22 +62,26 @@ class Directory(IPackSource):
     def path(self, value):
         self._path = value
 
-    def __init__(self, pack, index):
+    def __init__(self, pack: Pack, index: 'IndexDirectory'):
         self._pack = pack
         self._index = index
-        self._file_name_map = {}
-        self._files = WeakValueDictionary({})
+        self._file_name_map = {}  # type: Dict[str, int]
+        self._files = {}  # type: Dict[int, File]
         self._path = None
 
     def __repr__(self):
         return "Dir(%s)" % self.path
+
+    def __str__(self):
+        return self.path
 
     def file_exists(self, name_or_key):
         if isinstance(name_or_key, str):
             name_or_key = _compute_hash(name_or_key)
         return name_or_key in self.index.files
 
-    def get_file(self, name_or_key):
+    def get_file(self, name_or_key) -> Union[type(None), File]:
+        # NOTE: This function /can/ return None!
         def from_key(key):
             if key in self._files:
                 return self._files[key]
@@ -86,14 +94,13 @@ class Directory(IPackSource):
             return file
         if isinstance(name_or_key, str):
             file = from_key(_compute_hash(name_or_key))
-            if file is None:
-                raise FileNotFoundError("Pack file not found '%s'" % name_or_key)
-            file.path = "%s/%s" % (self.path, name_or_key)
+            if file is not None:
+                file.path = "%s/%s" % (self.path, name_or_key)
             return file
         else:
             return from_key(name_or_key)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[File]:
         for file_key in self.index.files.values():
             yield self.get_file(file_key)
 
@@ -156,8 +163,8 @@ class IndexSource(IPackSource):
     def __init__(self, pack: Pack, index: 'Index'):
         self._pack = pack
         self._index = index
-        self._directories = {}
-        self._directory_path_map = {}
+        self._directories = {}  # type: Dict[int, Directory]
+        self._directory_path_map = {}  # type: Dict[str, int]
 
     def __repr__(self):
         return "IndexSource(pack=%r)" % self.pack
@@ -207,11 +214,15 @@ class IndexSource(IPackSource):
         dir_path = path[:last_separator]
         base_name = path[last_separator + 1:]
         _dir = self.get_directory(dir_path)
-        return _dir.get_file(base_name)
+        if _dir is not None:
+            return _dir.get_file(base_name)
+        return None
 
     def get_file_from_keys(self, directory_key: int, file_key: int) -> File:
         _dir = self.get_directory(directory_key)
-        return _dir.get_file(file_key)
+        if _dir is not None:
+            return _dir.get_file(file_key)
+        return None
 
     def __iter__(self):
         from itertools import chain
@@ -351,7 +362,7 @@ class Index2Source(IPackSource):
     def __init__(self, pack, index):
         self._pack = pack
         self._index = index
-        self._files = WeakValueDictionary()
+        self._files = {}
         self._file_path_map = {}
 
     def file_exists(self, path_or_hash):
