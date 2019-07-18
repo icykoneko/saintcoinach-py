@@ -62,7 +62,7 @@ class MasterpieceSupplyDuty(XivRow):
             self.__max_class_job_level = duty.as_int32('ClassJobLevel{Max}', index)
             self.__stars = duty.as_int32('Stars', index)
 
-            bonus_multiplier_row = duty.as_T(IXivRow, 'BonusMultiplier', index)
+            bonus_multiplier_row = duty.as_T(XivRow, 'BonusMultiplier', index)
             self.__xp_multiplier = bonus_multiplier_row.as_int16('XpMultiplier', 1) / 1000
             self.__xp_multiplier2 = bonus_multiplier_row.as_int16('XpMultiplier', 0) / 1000
             self.__currency_multiplier = bonus_multiplier_row.as_int16('CurrencyMultiplier', 1) / 1000

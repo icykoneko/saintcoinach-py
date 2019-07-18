@@ -72,55 +72,55 @@ class XivRow(IXivRow):
     def key(self) -> int: return self.__source_row.key
 
     @staticmethod
-    def build_column_name(column: str, *indices: List[int]) -> str:
+    def build_column_name(column: str, *indices: int) -> str:
         return column + ''.join(['[%u]' % i for i in indices])
 
-    def as_image(self, column: str, *indices: List[int]) -> imaging.ImageFile:
+    def as_image(self, column: str, *indices: int) -> imaging.ImageFile:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return cast(imaging.ImageFile, self[column])
 
-    def as_string(self, column: str, *indices: List[int]) -> text.XivString:
+    def as_string(self, column: str, *indices: int) -> text.XivString:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return cast(text.XivString, self[column])
 
-    def as_boolean(self, column: str, *indices: List[int]) -> bool:
+    def as_boolean(self, column: str, *indices: int) -> bool:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return bool(self[column])
 
-    def as_int16(self, column: str, *indices: List[int]) -> int:
+    def as_int16(self, column: str, *indices: int) -> int:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return int(self[column]) & 0xFFFF
 
-    def as_int32(self, column: str, *indices: List[int]) -> int:
+    def as_int32(self, column: str, *indices: int) -> int:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return int(self[column]) & 0xFFFFFFFF
 
-    def as_int64(self, column: str, *indices: List[int]) -> int:
+    def as_int64(self, column: str, *indices: int) -> int:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return int(self[column])
 
-    def as_single(self, column: str, *indices: List[int]) -> float:
+    def as_single(self, column: str, *indices: int) -> float:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return float(self[column])
 
-    def as_double(self, column: str, *indices: List[int]) -> float:
+    def as_double(self, column: str, *indices: int) -> float:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return float(self[column])
 
-    def as_quad(self, column: str, *indices: List[int]) -> int:
+    def as_quad(self, column: str, *indices: int) -> int:
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return int(self[column])
 
-    def as_T(self, t_cls: Type[T_cls], column: str = None, *indices: List[int]) -> T_cls:
+    def as_T(self, t_cls: Type[T_cls], column: str = None, *indices: int) -> T_cls:
         if column is None:
             column = t_cls.__name__
         if len(indices) > 0:
