@@ -77,6 +77,8 @@ class TagType(Enum):
     Unknown17 = 0x17
     Emphasis2 = 0x19
     Emphasis = 0x1A
+    Unknown1B = 0x1B  # TODO: QuickChatTransient
+    Unknown1C = 0x1C  # TODO: QuickChatTransient
     Indent = 0x1D
     CommandIcon = 0x1E
     Dash = 0x1F
