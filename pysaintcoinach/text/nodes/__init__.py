@@ -73,16 +73,13 @@ class IStaticNode(INode):
 
 class ArgumentCollection(Iterable[INode]):
     @property
-    def has_items(self): return self.__items is not None and len(self.__items) > 0
+    def has_items(self): return len(self.__items) > 0
 
     def __iter__(self):
         return iter(self.__items)
 
-    def __init__(self, items: Iterable[INode]):
-        if items is None:
-            self.__items = []  # type: List[INode]
-        else:
-            self.__items = list(items)
+    def __init__(self, *items: INode):
+        self.__items = list(items)
 
     def __str__(self):
         s = ''
@@ -233,9 +230,9 @@ class GenericElement(INodeWithChildren, INodeWithArguments, IExpressionNode):
             f |= NodeFlags.HasChildren
         return f
 
-    def __init__(self, tag: TagType, content: INode, arguments: Iterable[INode]):
+    def __init__(self, tag: TagType, content: INode, *arguments: INode):
         self.__tag = tag
-        self.__arguments = ArgumentCollection(arguments)
+        self.__arguments = ArgumentCollection(*arguments)
         self.__content = content
 
     def __str__(self):
@@ -339,9 +336,9 @@ class OpenTag(IExpressionNode):
     @property
     def arguments(self): return self.__arguments
 
-    def __init__(self, tag: TagType, arguments: Iterable[INode]):
+    def __init__(self, tag: TagType, *arguments: INode):
         self.__tag = tag
-        self.__arguments = ArgumentCollection(arguments)
+        self.__arguments = ArgumentCollection(*arguments)
 
     def __str__(self):
         s = StringTokens.TAG_OPEN

@@ -63,7 +63,7 @@ class XivString(IExpressionNode, INodeWithChildren):
             return NotImplemented
 
     def evaluate(self, parameters):
-        return ExpressionCollection([c.evaluate(parameters) for c in self.children])
+        return ExpressionCollection(*[c.evaluate(parameters) for c in self.children])
 
     def accept(self, visitor):
         return visitor.visit(self)
@@ -289,7 +289,7 @@ class XivStringDecoder(object):
         if has_content:
             content = self._decode_expression(input)
 
-        return nodes.GenericElement(tag, content, arguments)
+        return nodes.GenericElement(tag, content, *arguments)
 
     def _decode_generic_element_with_variable_arguments(self,
                                                         input: io.BytesIO,
@@ -303,7 +303,7 @@ class XivStringDecoder(object):
         while i < max_count and input.tell() < end:
             args.append(self._decode_expression(input))
             i += 1
-        return nodes.GenericElement(tag, None, args)
+        return nodes.GenericElement(tag, None, *args)
 
     def _decode_generic_surrounding_tag(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         if length != 1:
@@ -318,21 +318,21 @@ class XivStringDecoder(object):
     def _decode_zero_padded_value(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         val = self._decode_expression(input)
         arg = self._decode_expression(input)
-        return nodes.GenericElement(tag, val, [arg])
+        return nodes.GenericElement(tag, val, arg)
 
     def _decode_color(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         t = _read_byte(input)
         if length == 1 and t == 0xEC:
             return nodes.CloseTag(tag)
         color = self._decode_expression(input, t)
-        return nodes.OpenTag(tag, [color])
+        return nodes.OpenTag(tag, color)
 
     def _decode_format(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         end = input.tell() + length
 
         arg1 = self._decode_expression(input)
         arg2 = nodes.StaticByteArray(input.read(end - input.tell()))
-        return nodes.GenericElement(tag, None, [arg1, arg2])
+        return nodes.GenericElement(tag, None, arg1, arg2)
 
     def _decode_if(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         end = input.tell() + length

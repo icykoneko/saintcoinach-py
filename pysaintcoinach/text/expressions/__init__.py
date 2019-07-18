@@ -34,11 +34,8 @@ class ExpressionCollection(IExpression):
     @property
     def children(self) -> Iterable[IExpression]: return self.__children
 
-    def __init__(self, children: Iterable[IExpression]):
-        if children is None:
-            self.__children = []  # type: List[IExpression]
-        else:
-            self.__children = list(children)
+    def __init__(self, *children: IExpression):
+        self.__children = list(children)
         self.separator = ''
 
     def __str__(self):
