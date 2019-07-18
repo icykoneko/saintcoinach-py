@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, Any, cast
+import sys
 
 from ..ex.relational.sheet import IRelationalRow, IRelationalSheet
 from .. import xiv
@@ -119,6 +120,12 @@ class XivRow(IXivRow):
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
         return int(self[column])
+
+    def as_int_array(self, column: str, *indices: int) -> List[int]:
+        if len(indices) > 0:
+            column = self.build_column_name(column, *indices)
+        input = int(self[column]).to_bytes(4, sys.byteorder, signed=False)
+        return [v & 0xFF for v in input]
 
     def as_T(self, t_cls: Type[T_cls], column: str = None, *indices: int) -> T_cls:
         if column is None:

@@ -100,7 +100,7 @@ class IconConverter(IValueConverter):
     def convert(self, row: IDataRow, raw_value: object):
         from .... import imaging
         nr = int(raw_value)
-        if nr < 0 or nr > 999999:
+        if nr <= 0 or nr > 999999:
             return None
 
         sheet = row.sheet
