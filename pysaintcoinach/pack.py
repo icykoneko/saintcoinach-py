@@ -132,7 +132,7 @@ class PackCollection(object):
 
     def get_file(self, path: str):
         pack = self.get_pack(path)
-        return pack.get_file(path)
+        return pack.get_file(path) if pack is not None else None
 
     def get_pack(self, id_or_path):
         if isinstance(id_or_path, PackIdentifier):

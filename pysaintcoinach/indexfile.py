@@ -188,7 +188,8 @@ class IndexSource(IPackSource):
 
         if isinstance(path_or_key, str):
             _dir = from_key(_compute_hash(path_or_key))
-            _dir.path = path_or_key
+            if _dir is not None:
+                _dir.path = path_or_key
             return _dir
         else:
             return from_key(path_or_key)
