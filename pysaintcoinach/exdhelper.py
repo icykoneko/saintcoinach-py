@@ -1,9 +1,98 @@
-from typing import cast
+from typing import cast, Iterable
 from .ex.language import Language
+import csv
 
 
 class ExdHelper(object):
     from .ex import ISheet, IRow, IMultiRow
+    from .ex.relational import IRelationalSheet
+
+    @staticmethod
+    def save_as_csv(sheet: IRelationalSheet,
+                    language: Language,
+                    path: str,
+                    write_raw: bool):
+        with open(path, 'w', encoding='utf8', newline='') as s:
+            writer = csv.writer(s)
+            index_line = ['key']
+            name_line = ['#']
+            type_line = ['int32']
+
+            col_indices = []
+            for col in sheet.header.columns:
+                index_line.append(col.index)
+                name_line.append(col.name)
+                type_line.append(col.value_type)
+
+                col_indices.append(col.index)
+
+            writer.writerow(index_line)
+            writer.writerow(name_line)
+            writer.writerow(type_line)
+
+            ExdHelper.write_rows(writer, sheet, language, col_indices, write_raw)
+
+    @staticmethod
+    def write_rows(writer,
+                   sheet: ISheet,
+                   language: Language,
+                   col_indices: Iterable[int],
+                   write_raw: bool):
+        from .ex import ISheet, IRow
+        from .xiv import XivRow
+        from . import ex
+        from .ex import variant2
+        from tqdm import tqdm
+
+        if sheet.header.variant == 1:
+            ExdHelper._write_rows_core(writer,
+                                       tqdm(cast(ISheet[IRow], sheet),
+                                            unit='row', leave=True, ncols=150,
+                                            desc='%s%s' % (sheet.name,
+                                                           language.get_suffix()),
+                                            bar_format='{l_bar:>50.50}{bar}{r_bar:50}'),
+                                       language,
+                                       col_indices, write_raw, ExdHelper.get_row_key)
+        else:
+            ExdHelper._write_rows_core(writer,
+                                       tqdm(cast(ISheet[XivRow], sheet),
+                                            unit='row', leave=True, ncols=150,
+                                            desc='%s%s' % (sheet.name,
+                                                           language.get_suffix()),
+                                            bar_format='{l_bar:>50.50}{bar}{r_bar:50}'),
+                                       language,
+                                       col_indices, write_raw, ExdHelper.get_sub_row_key)
+
+
+    @staticmethod
+    def _write_rows_core(writer,
+                         rows: Iterable[IRow],
+                         language: Language,
+                         col_indices: Iterable[int],
+                         write_raw: bool,
+                         write_key):
+        # for row in sorted(rows, key=lambda x: x.key):
+        for row in rows:
+            from .ex import ISheet, IRow, IMultiRow
+            from .xiv import XivRow, IXivRow
+
+            use_row = row
+
+            if isinstance(use_row, IXivRow):
+                use_row = cast(IXivRow, row).source_row
+            multi_row = cast(IMultiRow, use_row)
+
+            row_line = [write_key(use_row)]
+            for col in col_indices:
+                if language == Language.none or multi_row is None:
+                    v = use_row.get_raw(col) if write_raw else use_row[col]
+                else:
+                    v = multi_row.get_raw(col, language) if write_raw else multi_row[(col, language)]
+
+                row_line.append(v)
+
+            writer.writerow(row_line)
+
     @staticmethod
     def convert_rows(sheet: ISheet, language: Language = Language.none, cols = None):
         if cols is None:

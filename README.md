@@ -26,22 +26,7 @@ Special thanks to @[ufx](https://github.com/ufx) and all contributors to the Sai
 
 ## Cloning this Repo
 
-This repo makes use of submodules and symlinks. When cloning, please include the `--recurse-submodules` option.
-
-If using Windows, you have a couple options for handling symlinks:
-
-1. Follow the instructions in https://stackoverflow.com/questions/5917249/git-symlinks-in-windows, creating the command aliases. Then, after cloning, you should be able to just run `git submodule foreach --recursive git rm-symlinks` to convert them into hardlinks.
-    * **NOTE:** You will need to run `git submodule foreach --recursive git checkout-symlinks` to restore the git symlinks.
-2. Enable the permissions for creating symlinks in Git for Windows; see https://github.com/git-for-windows/git/wiki/Symbolic-Links.
-    * **NOTE:** You need to start Git Bash in admin mode for it to create symlinks. If you forgot to do that during cloning, you'll need to follow the instructions in part 1 instead.
-
-Alternatively, this workflow also works, and doesn't require any aliases. You do need to enable permissions, and will need to use admin mode for some parts:
-```
-git clone --recurse-submodules git@github.com:icykoneko/saintcoinach-py.git
-git submodule foreach --recursive git config core.symlinks true
-# As admin:
-git submodule update --force --recursive
-```
+This repo makes use of submodules. When cloning, please include the `--recurse-submodules` option.
 
 ## Usage
 
@@ -126,6 +111,18 @@ As a bonus, the `pysaintcoinach.exdhelper.ExdHelper` class can dump an entire sh
 ### Documentation
 
 Aside from this readme, there's not much in the way of function documentation. As with the original Saint Coinach library, there should be enough documentation available to know how to use the library for game data, but figuring out the internal working... yea, it's a challenge.
+
+## xivshell Module
+
+The `xivshell` module is a Python port of `SaintCoinach.Cmd`.  It is a very basic console application that can be used to extract various assets. The following commands are currently supported:
+
+* `lang`: Displays or changes the language used for data files. Valid arguments are: `ja` (Japanese), `en` (English), `de` (German), or `fr` (French). If no argument is supplied, the currently used language is shown.
+* `raw`: Exports a file from the game assets without any conversions. The argument should be the friendly name of the file.
+* `image`: Exports a file from the game assets as a PNG-image. The argument should be the friendly name of the image file.
+* `ui`: Exports one or multiple UI icons as PNG-images. The argument can either be the number of a single UI icon, or the first and last number for a range of icons separated by a space. Valid numbers are in the interval \[0, 999999\].
+* `exd`: Exports all or a specified number of game data sheets as CSV-files. Arguments can either be empty to export all files, or a list of sheet names separated by whitespace.
+* `rawexd`: Exports all or a specified number of game data sheets as CSV-files without post-processing applied. Arguments can either be empty to export all files, or a list of sheet names separated by whitespace.
+* `bgm`: Exports all sound files referenced in the BGM sheet as OGG-files.
 
 ## Contributing to the code base
 
