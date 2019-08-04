@@ -233,3 +233,8 @@ class XivSheet2(XivSheet[T]):
 
     def _create_sub_row(self, source_row: IRelationalRow) -> T:
         return self.__t_cls(self, source_row)
+
+    def __getitem__(self, item):
+        # The base version of SaintCoinach doesn't provide a safe method of
+        # using the indexer, even though it inherits it from XivSheet<T>.
+        raise RuntimeError('__getitem__ is not supported for XivSheet2 classes. Use iterator instead.')
