@@ -1,7 +1,7 @@
 from typing import Type
 
 from .xivcollection import XivCollection
-from .sheet import IXivRow, IXivSheet, XivRow, XivSheet
+from .sheet import IXivRow, IXivSheet, IXivSubRow, XivRow, XivSheet, XivSubRow
 
 
 REGISTERED_ROW_CLASSES = {}

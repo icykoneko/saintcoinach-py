@@ -1,15 +1,105 @@
-from typing import Dict, Generic
+from typing import Dict, TypeVar, overload, Type, cast
 
 from ..ex.relational.excollection import RelationalExCollection
 from ..ex.relational.sheet import IRelationalSheet
 from ..pack import PackCollection
-from .sheet import XivSheet, XivRow, XivSheet2, XivSubRow
+from .sheet import XivSheet, XivRow, XivSheet2, XivSubRow, IXivSheet, IXivRow, IXivSubRow
+
+
+T_IXivRow = TypeVar('T_IXivRow', bound=IXivRow)
+T_IXivSubRow = TypeVar('T_IXivSubRow', bound=IXivSubRow)
 
 
 class XivCollection(RelationalExCollection):
+
+    @property
+    def enpcs(self) -> 'ENpcCollection':
+        from .collections import ENpcCollection
+        if self.__enpcs is None:
+            self.__enpcs = ENpcCollection(self)
+        return self.__enpcs
+
+    @property
+    def shops(self) -> 'ShopCollection':
+        from .collections import ShopCollection
+        if self.__shops is None:
+            self.__shops = ShopCollection(self)
+        return self.__shops
+
     def __init__(self, pack_collection: PackCollection):
         super(XivCollection, self).__init__(pack_collection)
         self.__sheet_name_to_type_map = {}  # type: Dict[str, type]
+        self.__enpcs = None
+        self.__shops = None
+
+    @overload
+    def get_sheet(self, t_cls: Type[T_IXivRow]) -> IXivSheet[T_IXivRow]:
+        pass
+
+    @overload
+    def get_sheet(self, t_cls: Type[T_IXivRow], id: int) -> IXivSheet[T_IXivRow]:
+        pass
+
+    @overload
+    def get_sheet(self, id: int) -> IXivSheet:
+        pass
+
+    @overload
+    def get_sheet(self, t_cls: Type[T_IXivRow], name: str) -> IXivSheet[T_IXivRow]:
+        pass
+
+    @overload
+    def get_sheet(self, name: str) -> IXivSheet[XivRow]:
+        pass
+
+    def get_sheet(self, *args) -> IRelationalSheet:
+        def _get_sheet_by_name(name):
+            return super(XivCollection, self).get_sheet(name)
+
+        def _get_sheet_by_id(id):
+            return super(XivCollection, self).get_sheet(id)
+
+        if len(args) == 1:
+            if isinstance(args[0], str):
+                return _get_sheet_by_name(args[0])
+            elif isinstance(args[0], int):
+                return _get_sheet_by_id(args[0])
+            else:
+                t = args[0]
+                name = t.__name__
+                return self.get_sheet(t, name)
+        else:
+            t = args[0]
+            if isinstance(args[1], str):
+                return cast(t, _get_sheet_by_name(args[1]))
+            else:
+                return cast(t, _get_sheet_by_id(args[1]))
+
+    @overload
+    def get_sheet2(self, t_cls: Type[T_IXivSubRow]) -> XivSheet2[T_IXivSubRow]:
+        pass
+
+    @overload
+    def get_sheet2(self, t_cls: Type[T_IXivSubRow], name: str) -> XivSheet2[T_IXivSubRow]:
+        pass
+
+    @overload
+    def get_sheet2(self, name: str) -> XivSheet2[XivSubRow]:
+        pass
+
+    def get_sheet2(self, *args) -> XivSheet2[XivSubRow]:
+        if len(args) == 1:
+            if isinstance(args[0], str):
+                return cast(XivSheet2[XivSubRow],
+                            super(XivCollection, self).get_sheet(args[0]))
+            else:
+                t = args[0]
+                name = t.__name__
+                return self.get_sheet2(t, name)
+        else:
+            t = args[0]
+            return cast(XivSheet2[t],
+                        super(XivCollection, self).get_sheet(args[1]))
 
     def _create_sheet(self, header):
         base_sheet = super(XivCollection, self)._create_sheet(header)

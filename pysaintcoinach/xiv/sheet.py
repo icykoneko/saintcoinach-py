@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, Any, cast
+from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, Iterator, Any, cast
 import sys
 
 from ..ex.relational.sheet import IRelationalRow, IRelationalSheet
@@ -149,7 +149,7 @@ class XivSheet(IXivSheet[T]):
     def collection(self) -> 'xiv.XivCollection':
         return self.__collection
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         for src_row in self.__source:
             key = src_row.key
             row = self.__rows.get(key)
@@ -161,7 +161,7 @@ class XivSheet(IXivSheet[T]):
     def _create_row(self, source_row: IRelationalRow) -> T:
         return cast(T, self.__t_cls(self, source_row))
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> T:
         def get_row(key):
             row = self.__rows.get(key)
             if row is not None:
