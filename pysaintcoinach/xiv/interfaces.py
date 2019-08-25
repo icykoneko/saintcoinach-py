@@ -10,7 +10,7 @@ class IItemSource(object):
 
     @property
     @abstractmethod
-    def items(self) -> 'Iterable[Item]':
+    def items(self):
         """
         Gets the `Item`s that can be obtained from the current object.
         :return: The `Item`s that can be obtained from the current object.

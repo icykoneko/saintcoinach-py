@@ -1,3 +1,4 @@
+from typing import Iterable
 from ..ex.relational import IRelationalRow
 from . import xivrow, XivRow, IXivSheet, IXivRow
 from .. import text
@@ -59,10 +60,10 @@ class FishingSpot(XivRow, IItemSource, ILocatable, ILocation):
         return self.as_T(PlaceName)
 
     @property
-    def items(self) -> 'Iterable[Item]':
+    def items(self):
         if self.__items is None:
             self.__items = self.__build_items()
-        return iter(self.__items)
+        return self.__items
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(FishingSpot, self).__init__(sheet, source_row)

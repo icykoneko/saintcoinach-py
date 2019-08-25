@@ -61,7 +61,7 @@ class XivRow(IXivRow):
     @property
     def default_value(self): return self.__source_row.default_value
 
-    def __getitem__(self, item: Union[int, str, Tuple[str, List[int]]]) -> Any:
+    def __getitem__(self, item: Union[int, str, Tuple[str, int], Tuple[str, int, int]]) -> Any:
         if isinstance(item, tuple):
             return self.__source_row[self.build_column_name(item[0], *item[1:])]
         return self.__source_row[item]
@@ -132,6 +132,10 @@ class XivRow(IXivRow):
             column = t_cls.__name__
         if len(indices) > 0:
             column = self.build_column_name(column, *indices)
+        value = self[column]
+        if isinstance(value, int):
+            # Uh-oh, the definition didn't convert it for us...
+            return self.sheet.collection.get_sheet(t_cls)[value]
         return cast(t_cls, self[column])
 
 
@@ -237,4 +241,7 @@ class XivSheet2(XivSheet[T]):
     def __getitem__(self, item):
         # The base version of SaintCoinach doesn't provide a safe method of
         # using the indexer, even though it inherits it from XivSheet<T>.
-        raise RuntimeError('__getitem__ is not supported for XivSheet2 classes. Use iterator instead.')
+
+        # raise RuntimeError('__getitem__ is not supported for XivSheet2 classes. Use iterator instead.')
+
+        return super(XivSheet2, self).__getitem__(item)
