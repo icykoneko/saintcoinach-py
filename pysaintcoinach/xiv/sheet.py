@@ -233,6 +233,10 @@ class XivSheet2(XivSheet[T]):
                     self.__sub_rows[key] = row
                 yield row
 
+    def __len__(self):
+        import operator
+        return sum(map(operator.attrgetter('sub_row_count'), self.__source))
+
     def _create_sub_row(self, source_row: IRelationalRow) -> T:
         return self.__t_cls(self, source_row)
 
