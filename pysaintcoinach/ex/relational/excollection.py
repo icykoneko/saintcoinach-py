@@ -1,9 +1,13 @@
+from typing import overload, cast, TypeVar, Type
 from ..excollection import ExCollection
 from .datasheet import RelationalDataSheet
 from .definition import RelationDefinition
 from . import IRelationalRow, IRelationalSheet
 from .header import RelationalHeader
 from .multisheet import RelationalMultiSheet, RelationalMultiRow
+
+
+T = TypeVar('T')
 
 
 class RelationalExCollection(ExCollection):
@@ -34,8 +38,29 @@ class RelationalExCollection(ExCollection):
                                                                t, self, header)
         return RelationalDataSheet[t](t, self, header, header.available_languages[0])
 
-    def get_sheet(self, id_or_name) -> IRelationalSheet:
-        return super(RelationalExCollection, self).get_sheet(id_or_name)
+    @overload
+    def get_sheet(self, t_cls: Type[T], id: int) -> IRelationalSheet[T]:
+        pass
+
+    @overload
+    def get_sheet(self, id: int) -> IRelationalSheet:
+        pass
+
+    @overload
+    def get_sheet(self, t_cls: Type[T], name: str) -> IRelationalSheet[T]:
+        pass
+
+    @overload
+    def get_sheet(self, name: str) -> IRelationalSheet:
+        pass
+
+    def get_sheet(self, *args) -> IRelationalSheet:
+        if isinstance(args[0], type):
+            return cast(IRelationalSheet[T],
+                        super(RelationalExCollection, self).get_sheet(args[1]))
+
+        return cast(IRelationalSheet,
+                    super(RelationalExCollection, self).get_sheet(args[0]))
 
     def find_reference(self, key: int) -> IRelationalRow:
         for sheet_def in filter(lambda d: d.is_generic_reference_target,

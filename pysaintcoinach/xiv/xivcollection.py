@@ -52,7 +52,7 @@ class XivCollection(RelationalExCollection):
     def get_sheet(self, name: str) -> IXivSheet[XivRow]:
         pass
 
-    def get_sheet(self, *args) -> IRelationalSheet:
+    def get_sheet(self, *args):
         def _get_sheet_by_name(name):
             return super(XivCollection, self).get_sheet(name)
 

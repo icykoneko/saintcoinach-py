@@ -1,7 +1,5 @@
 import io
-from weakref import WeakValueDictionary
-from enum import Enum
-from typing import TypeVar, Generic, overload, Dict
+from typing import TypeVar, Type, overload, cast
 
 from .header import Header
 from .datasheet import DataSheet
@@ -80,11 +78,30 @@ class ExCollection(object):
         else:
             return id_or_name in self._sheet_identifiers
 
-    def get_sheet(self, id_or_name) -> 'ex.ISheet':
-        if isinstance(id_or_name, int):
-            name = self._sheet_identifiers[id_or_name]
+    @overload
+    def get_sheet(self, t_cls: Type[T], id: int) -> ex.ISheet[T]:
+        pass
+
+    @overload
+    def get_sheet(self, id: int) -> ex.ISheet:
+        pass
+
+    @overload
+    def get_sheet(self, t_cls: Type[T], name: str) -> ex.ISheet[T]:
+        pass
+
+    @overload
+    def get_sheet(self, name: str) -> ex.ISheet:
+        pass
+
+    def get_sheet(self, *args) -> ex.ISheet:
+        if isinstance(args[0], type):
+            return cast(ex.ISheet[args[0]], self.get_sheet(args[1]))
+
+        if isinstance(args[0], int):
+            name = self._sheet_identifiers[args[0]]
         else:
-            name = id_or_name
+            name = args[0]
 
         EX_HPATH_FORMAT = "exd/%s.exh"
 
