@@ -202,7 +202,7 @@ class Pack(Iterable):
         self._collection = collection
         self._data_directory = data_directory
         self._id = id
-        self._data_streams = WeakValueDictionary()  # type: Dict[Tuple[int, int], IO]
+        self._data_streams = {}  # type: Dict[Tuple[int, int], IO]
         self._data_streams_lock = Lock()
         self._keep_in_memory = False
         self._buffers = {}  # type: Dict[int, bytes]
