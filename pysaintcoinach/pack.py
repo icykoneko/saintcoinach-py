@@ -3,7 +3,11 @@ from pathlib import Path
 from weakref import WeakValueDictionary
 import io
 import logging
-from typing import Iterable as IterableT, Dict
+from typing import Iterable as IterableT, Dict, Tuple, IO
+from threading import Lock
+import threading
+
+from .util import ConcurrentDictionary
 
 
 logger = logging.getLogger(__name__)
@@ -124,7 +128,7 @@ class PackCollection(object):
         else:
             raise TypeError("data_directory")
         self._data_directory = data_directory
-        self._packs = {}  # type: Dict[PackIdentifier, Pack]
+        self._packs = ConcurrentDictionary()  # type: ConcurrentDictionary[PackIdentifier, Pack]
 
     def file_exists(self, path: str):
         pack = self.get_pack(path)
@@ -136,16 +140,13 @@ class PackCollection(object):
 
     def get_pack(self, id_or_path):
         if isinstance(id_or_path, PackIdentifier):
-            id = id_or_path
+            _id = id_or_path
         else:
-            id = PackIdentifier.get(id_or_path)
-        if id is None:
+            _id = PackIdentifier.get(id_or_path)
+        if _id is None:
             return None
-        pack = self._packs.get(id)
-        if pack is None:
-            pack = Pack(self.data_directory, id, self)
-            self._packs[id] = pack
-        return pack
+
+        return self._packs.get_or_add(_id, lambda i: Pack(self.data_directory, _id, self))
 
 
 class Pack(Iterable):
@@ -201,9 +202,10 @@ class Pack(Iterable):
         self._collection = collection
         self._data_directory = data_directory
         self._id = id
-        self._data_streams = WeakValueDictionary()
+        self._data_streams = WeakValueDictionary()  # type: Dict[Tuple[int, int], IO]
+        self._data_streams_lock = Lock()
         self._keep_in_memory = False
-        self._buffers = {}
+        self._buffers = {}  # type: Dict[int, bytes]
 
         index_path = data_directory.joinpath(id.expansion, self._INDEX_FILE_FORMAT.format(id.type_key, id.expansion_key, id.number))
         index2_path = data_directory.joinpath(id.expansion, self._INDEX2_FILE_FORMAT.format(id.type_key, id.expansion_key, id.number))
@@ -214,8 +216,13 @@ class Pack(Iterable):
         else:
             raise FileNotFoundError
 
-    def get_data_stream(self, dat_file=0) -> io.RawIOBase:
-        stream = self._data_streams.get(dat_file, None)
+    def get_data_stream(self, dat_file=0) -> IO:
+        thread = threading.get_ident()
+
+        key = (thread, dat_file)
+        with self._data_streams_lock:
+            stream = self._data_streams.get(key, None)
+
         if stream is not None:
             return stream
 
@@ -228,9 +235,12 @@ class Pack(Iterable):
                 self._buffers[dat_file] = full_path.read_bytes()
             stream = io.BufferedReader(self._buffers[dat_file])
         else:
+            logger.info('Opening: %s' % full_path)
             stream = full_path.open(mode='rb')
 
-        self._data_streams[dat_file] = stream
+        with self._data_streams_lock:
+            self._data_streams[key] = stream
+
         return stream
 
     def __str__(self):

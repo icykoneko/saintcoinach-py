@@ -6,6 +6,7 @@ from .sheet import IRelationalRow, IRelationalSheet
 from ..sheet import ISheet
 from ...file import File
 from ... import ex
+from ...util import ConcurrentDictionary
 # import ex.relational
 
 
@@ -78,7 +79,7 @@ class RelationalDataSheet(DataSheet[T], IRelationalDataSheet[T]):
                  language: 'ex.Language'):
         super(RelationalDataSheet, self).__init__(t_cls, collection, header, language)
         self.__t_cls = t_cls
-        self.__indexes = {}  # type: Dict[str, RelationalDataIndex[T]]
+        self.__indexes = ConcurrentDictionary()  # type: ConcurrentDictionary[str, RelationalDataIndex[T]]
 
     def _create_partial_sheet(self, _range: range, _file: File) -> ISheet[T]:
         return RelationalPartialDataSheet[T](self.__t_cls, self, _range, _file)
@@ -87,15 +88,13 @@ class RelationalDataSheet(DataSheet[T], IRelationalDataSheet[T]):
         if key == 0:
             return None
 
-        index = self.__indexes.get(index_name, None)
-        if index is None:
+        def _add_value(i):
             column = self.header.find_column(index_name)
             if column is None:
                 raise KeyError()
 
-            index = RelationalDataIndex[T](self.__t_cls, self, column)
-            self.__indexes[index_name] = index
-
+            return RelationalDataIndex[T](self.__t_cls, self, column)
+        index = self.__indexes.get_or_add(index_name, _add_value)
         return index[key]
 
 

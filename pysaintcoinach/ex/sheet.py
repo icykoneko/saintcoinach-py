@@ -23,6 +23,11 @@ class IRow(ABC):
     def get_raw(self, column_index: int, **kwargs) -> object:
         pass
 
+    @abstractmethod
+    def column_values(self) -> Iterable[object]:
+        pass
+
+
 T = TypeVar('T', bound=IRow)
 
 

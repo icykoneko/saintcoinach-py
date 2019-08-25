@@ -1,14 +1,15 @@
 from typing import Union, Tuple, Iterable as IterableT, TypeVar, Type, Dict
-from abc import ABC, abstractmethod
-from weakref import WeakValueDictionary
+from abc import abstractmethod
 from struct import unpack_from
 from collections import OrderedDict
+from threading import Lock
 
 from ..file import File
 from .sheet import IRow, ISheet
 from .language import Language
 from .header import Header
 from .. import ex
+from ..util import ConcurrentDictionary
 
 
 class IDataRow(IRow):
@@ -71,6 +72,11 @@ class DataRowBase(IDataRow):
         column = self.sheet.header.get_column(column_index)
         return column.read_raw(self.sheet.get_buffer(), self)
 
+    def column_values(self) -> IterableT[object]:
+        buffer = self.sheet.get_buffer()
+        for column in self.sheet.header.columns:
+            yield column.read(buffer, self)
+
     def items(self):
         item_dict = OrderedDict()
         for c in self.sheet.header.columns:
@@ -108,7 +114,7 @@ class PartialDataSheet(IDataSheet[T]):
                  source_sheet: IDataSheet[T],
                  _range: range,
                  file: File):
-        self.__rows = {}
+        self.__rows = None  # type: ConcurrentDictionary[int, T]
         self.__row_offsets = {}
         self.__source_sheet = source_sheet
         self.__range = _range
@@ -133,7 +139,7 @@ class PartialDataSheet(IDataSheet[T]):
         count = int(header_len / ENTRY_LENGTH)
         current_position = ENTRIES_OFFSET
 
-        self.__rows = {}
+        self.__rows = ConcurrentDictionary()
         for i in range(count):
             key, = unpack_from(">l", buffer, current_position + ENTRY_KEY_OFFSET)
             off, = unpack_from(">l", buffer, current_position + ENTRY_POSITION_OFFSET)
@@ -149,13 +155,13 @@ class PartialDataSheet(IDataSheet[T]):
 
     def __getitem__(self, item: Union[int, Tuple[int, int]]) -> Union[T, IRow, object]:
         def get_row(key):
-            row = self.__rows.get(key)
-            if row is not None:
-                return row
-            offset = self.__row_offsets[key]
-            row = self._create_row(key, offset)
-            self.__rows[key] = row
-            return row
+            def _add_value(k):
+                offset = self.__row_offsets[key]
+                if offset is not None:
+                    return self._create_row(k, offset)
+                else:
+                    return None  # there is no default for T.
+            return self.__rows.get_or_add(key, _add_value)
 
         if isinstance(item, tuple):
             return get_row(item[0])[item[1]]
@@ -170,11 +176,7 @@ class PartialDataSheet(IDataSheet[T]):
 
     def __iter__(self):
         for key, off in self.__row_offsets.items():
-            row = self.__rows.get(key)
-            if row is None:
-                row = self._create_row(key, off)
-                self.__rows[key] = row
-            yield row
+            yield self.__rows.get_or_add(key, lambda k: self._create_row(k, off))
 
 
 class DataSheet(IDataSheet[T]):
@@ -198,6 +200,7 @@ class DataSheet(IDataSheet[T]):
         self.__partial_sheets_created = False
         self.__partial_sheets = {}
         self.__row_to_partial_sheet_map = {}
+        self.__partial_sheets_lock = Lock()
         self.__collection = collection
         self.__header = header
         self.__language = language
@@ -241,25 +244,24 @@ class DataSheet(IDataSheet[T]):
         if not any(res):
             raise ValueError("row")
 
-        _range = res[0]
-        partial = self.__partial_sheets.get(_range)
-        if partial is None:
-            partial = self.__create_partial_sheet(_range)
-        return partial
+        with self.__partial_sheets_lock:
+            _range = res[0]
+            partial = self.__partial_sheets.get(_range)
+            if partial is None:
+                partial = self.__create_partial_sheet(_range)
+            return partial
 
     def __create_all_partial_sheets(self):
-        if self.__partial_sheets_created:
-            return
+        with self.__partial_sheets_lock:
+            if self.__partial_sheets_created:
+                return
 
-        for _range in self.header.data_file_ranges:
-            if _range in self.__partial_sheets:
-                continue
-            self.__create_partial_sheet(_range)
+            for _range in self.header.data_file_ranges:
+                if _range in self.__partial_sheets:
+                    continue
+                self.__create_partial_sheet(_range)
 
-        # for _range in filter(lambda item: item not in self.__partial_sheets, self.header.data_file_ranges):
-        #     self.__create_partial_sheet(_range)
-
-        self.__partial_sheets_created = True
+            self.__partial_sheets_created = True
 
     def __create_partial_sheet(self, _range: range) -> ISheet[T]:
         file = self._get_partial_file(_range)

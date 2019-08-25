@@ -4,6 +4,7 @@ from ..ex.relational.excollection import RelationalExCollection
 from ..ex.relational.sheet import IRelationalSheet
 from ..pack import PackCollection
 from .sheet import XivSheet, XivRow, XivSheet2, XivSubRow, IXivSheet, IXivRow, IXivSubRow
+from ..util import ConcurrentDictionary
 
 
 T_IXivRow = TypeVar('T_IXivRow', bound=IXivRow)
@@ -28,7 +29,9 @@ class XivCollection(RelationalExCollection):
 
     def __init__(self, pack_collection: PackCollection):
         super(XivCollection, self).__init__(pack_collection)
-        self.__sheet_name_to_type_map = {}  # type: Dict[str, type]
+        # NOTE: Our port doesn't actually make use of `sheet_name_to_type_map` because we use the decorator
+        # instead. Runtime reflection is a bit different in Python.
+        self.__sheet_name_to_type_map = ConcurrentDictionary()  # type: ConcurrentDictionary[str, type]
         self.__enpcs = None
         self.__shops = None
 

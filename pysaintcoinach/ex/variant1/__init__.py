@@ -3,6 +3,7 @@ from struct import unpack_from
 
 from ..datasheet import DataRowBase, IDataSheet
 from ..relational.datasheet import IRelationalDataRow, IRelationalDataSheet
+from ...util import ConcurrentDictionary
 
 
 class DataRow(DataRowBase):
@@ -29,7 +30,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
                  key: int,
                  offset: int):
         super(RelationalDataRow, self).__init__(sheet, key, offset)
-        self.__value_references = {}  # type: Dict[str, object]
+        self.__value_references = ConcurrentDictionary()  # type: ConcurrentDictionary[str, object]
 
     @property
     def sheet(self) -> IRelationalDataSheet:
@@ -51,17 +52,15 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
         if isinstance(item, int):
             return super(RelationalDataRow, self).__getitem__(item)
 
-        val = self.__value_references.get(item)
-        if val is not None:
-            return val
+        val_ref = self.__value_references.get_or_add(item, lambda c: self.__get_column_value(c))
+        # Not using weak references, so just return the result.
+        return val_ref
 
-        col = self.sheet.header.find_column(item)
+    def __get_column_value(self, column_name: str) -> object:
+        col = self.sheet.header.find_column(column_name)
         if col is None:
-            raise KeyError(item)
-        val = self[col.index]
-
-        self.__value_references[item] = val
-        return val
+            raise KeyError(column_name)
+        return self[col.index]
 
     def get_raw(self, column_name: Union[str, int] = None, **kwargs) -> object:
         if 'column_index' in kwargs:

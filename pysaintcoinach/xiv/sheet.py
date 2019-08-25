@@ -1,11 +1,12 @@
 from abc import abstractmethod
-from typing import Union, Type, TypeVar, List, Optional, Tuple, Dict, Generator, Callable, Generic, Iterable, Iterator, Any, cast
+from typing import Union, Type, TypeVar, List, Tuple, Dict, Iterable, Iterator, Any, cast
 import sys
 
 from ..ex.relational.sheet import IRelationalRow, IRelationalSheet
 from .. import xiv
 from .. import text
 from .. import imaging
+from ..util import ConcurrentDictionary
 
 
 class IXivRow(IRelationalRow):
@@ -65,6 +66,10 @@ class XivRow(IXivRow):
         if isinstance(item, tuple):
             return self.__source_row[self.build_column_name(item[0], *item[1:])]
         return self.__source_row[item]
+
+    @property
+    def column_values(self) -> Iterable[object]:
+        return self.__source_row.column_values()
 
     def get_raw(self, column_name: Union[int, str], **kwargs) -> Any:
         return self.__source_row.get_raw(column_name)
@@ -145,7 +150,7 @@ class XivSheet(IXivSheet[T]):
                  collection: 'xiv.XivCollection',
                  source: IRelationalSheet):
         self.__t_cls = t_cls
-        self.__rows = {}  # type: Dict[int, T]
+        self.__rows = ConcurrentDictionary()  # type: ConcurrentDictionary[int, T]
         self.__collection = collection
         self.__source = source
 
@@ -155,26 +160,19 @@ class XivSheet(IXivSheet[T]):
 
     def __iter__(self) -> Iterator[T]:
         for src_row in self.__source:
-            key = src_row.key
-            row = self.__rows.get(key)
-            if row is None:
-                row = self._create_row(src_row)
-                self.__rows[key] = row
-            yield row
+            yield self.__rows.get_or_add(src_row.key, lambda k: self._create_row(src_row))
 
     def _create_row(self, source_row: IRelationalRow) -> T:
         return cast(T, self.__t_cls(self, source_row))
 
     def __getitem__(self, item) -> T:
-        def get_row(key):
-            row = self.__rows.get(key)
-            if row is not None:
-                return row
+        def get_row(key) -> T:
+            def _add_value(k):
+                if k not in self.__source:
+                    raise KeyError(k)
+                return self._create_row(self.__source[key])
 
-            source_row = self.__source[key]
-            row = self._create_row(source_row)
-            self.__rows[key] = row
-            return row
+            return self.__rows.get_or_add(key, _add_value)
         if isinstance(item, tuple):
             return get_row(item[0])[item[1]]
         else:

@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from weakref import WeakValueDictionary
 import struct
 import zlib
 from typing import Dict, Union, Iterator
 
 from .pack import Pack, PackIdentifier
 from .file import FileFactory, File
+from .util import ConcurrentDictionary
 
 
 def _compute_hash(s):
@@ -66,7 +66,7 @@ class Directory(IPackSource):
         self._pack = pack
         self._index = index
         self._file_name_map = {}  # type: Dict[str, int]
-        self._files = {}  # type: Dict[int, File]
+        self._files = ConcurrentDictionary()  # type: ConcurrentDictionary[int, File]
         self._path = None
 
     def __repr__(self):

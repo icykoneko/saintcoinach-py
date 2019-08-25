@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Tuple, Iterable, Type
+from typing import TypeVar, Generic, Tuple, Iterable, Type, Dict
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 
@@ -7,6 +7,7 @@ from .language import Language
 from .header import Header
 from .datasheet import DataSheet
 from .. import ex
+from ..util import ConcurrentDictionary
 
 
 class IMultiRow(IRow):
@@ -22,6 +23,7 @@ class IMultiRow(IRow):
     @abstractmethod
     def get_raw(self, column_index: int, language: Language = None) -> object:
         pass
+
 
 TMulti = TypeVar('TMulti', bound=IMultiRow)
 TData = TypeVar('TData', bound=IRow)
@@ -48,8 +50,8 @@ class MultiSheet(IMultiSheet[TMulti, TData]):
                  tdata_cls: Type[TData],
                  collection: 'ex.ExCollection',
                  header: Header):
-        self.__localised_sheets = {}
-        self.__rows = {}
+        self.__localised_sheets = ConcurrentDictionary()  # type: ConcurrentDictionary[Language, ISheet[TData]]
+        self.__rows = ConcurrentDictionary()  # type: ConcurrentDictionary[int, TMulti]
         self.__collection = collection
         self.__header = header
         self.__tmulti_cls = tmulti_cls
@@ -74,17 +76,12 @@ class MultiSheet(IMultiSheet[TMulti, TData]):
         return len(self.active_sheet)
 
     def get_localised_sheet(self, language: Language) -> ISheet[TData]:
-        sheet = self.__localised_sheets.get(language)
-        if sheet is not None:
-            return sheet
+        def _add_value(l):
+            if l not in self.header.available_languages:
+                raise ValueError("language not supported")
+            return self._create_localised_sheet(l)
 
-        if language not in self.header.available_languages:
-            raise ValueError("language not supported")
-
-        sheet = self._create_localised_sheet(language)
-        self.__localised_sheets[language] = sheet
-
-        return sheet
+        return self.__localised_sheets.get_or_add(language, _add_value)
 
     def __iter__(self):
         for key in self.active_sheet.keys:
@@ -98,12 +95,7 @@ class MultiSheet(IMultiSheet[TMulti, TData]):
 
     def __getitem__(self, item):
         def get_row(key) -> TMulti:
-            row = self.__rows.get(key)
-            if row is not None:
-                return row
-            row = self._create_multi_row(key)
-            self.__rows[key] = row
-            return row
+            return self.__rows.get_or_add(key, lambda k: self._create_multi_row(k))
         if isinstance(item, tuple):
             return get_row(item[0])[item[1]]
         else:
@@ -135,6 +127,9 @@ class MultiRow(IMultiRow):
             return self.sheet.active_sheet[self.key].get_raw(column_index)
         else:
             return self.sheet.get_localised_sheet(language)[self.key].get_raw(column_index)
+
+    def column_values(self) -> Iterable[object]:
+        return self.sheet.active_sheet[self.key].column_values()
 
     def items(self):
         item_dict = OrderedDict()
