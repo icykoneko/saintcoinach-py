@@ -47,7 +47,7 @@ class ExdCommand(IXivShellCommandMixin):
 
                     success_count += 1
                 except Exception as e:
-                    logging.exception('Export of %s failed: %s', name, e)
+                    logger.exception('Export of %s failed: %s', name, e)
                     try:
                         if target.exists():
                             target.unlink()
@@ -55,7 +55,8 @@ class ExdCommand(IXivShellCommandMixin):
                         pass
                     fail_count += 1
 
-        logging.info('%d files exported, %d failed', success_count, fail_count)
+        print("\n")
+        logger.info('%d files exported, %d failed', success_count, fail_count)
 
         # Do not quit
         return False

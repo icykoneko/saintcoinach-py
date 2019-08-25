@@ -60,6 +60,7 @@ class UiCommand(IXivShellCommandMixin):
                 except Exception as e:
                     logger.error('%s: %s', file_path, e)
 
+        print("\n")
         logger.info('%d images processed', count)
 
         # Don't exit

@@ -61,6 +61,7 @@ class BgmCommand(IXivShellCommandMixin):
                     logger.exception('Export of %s failed', file_path)
                     fail_count += 1
 
+        print("\n")
         logger.info('%d files exported, %d failed', success_count, fail_count)
 
         # Do not quit
@@ -69,9 +70,8 @@ class BgmCommand(IXivShellCommandMixin):
     def __export_file(self, file_path: str, suffix: str) -> bool:
         from pysaintcoinach import sound
 
-        try:
-            file = self._realm.packs.get_file(file_path)
-        except:
+        file = self._realm.packs.get_file(file_path)
+        if file is None:
             return False
 
         scd_file = sound.ScdFile(file)
