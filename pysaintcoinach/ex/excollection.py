@@ -48,6 +48,8 @@ class ExCollection(object):
 
     def __build_index(self):
         ex_root = self.pack_collection.get_file("exd/root.exl")
+        if ex_root is None:
+            raise FileNotFoundError('exd/root.exl')
 
         available = []
 
@@ -114,6 +116,8 @@ class ExCollection(object):
 
         exh_path = EX_HPATH_FORMAT % (name)
         exh = self.pack_collection.get_file(exh_path)
+        if exh is None:
+            raise FileNotFoundError(exh_path)
 
         header = self._create_header(name, exh)
         sheet = self._create_sheet(header)

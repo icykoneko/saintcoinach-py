@@ -46,21 +46,19 @@ class ClassJob(XivRow):
     def icon(self) -> ImageFile:
         nr = ClassJob.ICON_OFFSET + self.key
         path = ClassJob.ICON_FORMAT.format(nr / 1000, nr)
-        try:
-            file = self.sheet.collection.pack_collection.get_file(path)
+        file = self.sheet.collection.pack_collection.get_file(path)
+        if file is not None:
             return cast(ImageFile, file)
-        except:
-            return None
+        return None
 
     @property
     def framed_icon(self) -> ImageFile:
         nr = ClassJob.FRAMED_ICON_OFFSET + self.key
         path = ClassJob.ICON_FORMAT.format(nr / 1000, nr)
-        try:
-            file = self.sheet.collection.pack_collection.get_file(path)
+        file = self.sheet.collection.pack_collection.get_file(path)
+        if file is not None:
             return cast(ImageFile, file)
-        except:
-            return None
+        return None
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(ClassJob, self).__init__(sheet, source_row)

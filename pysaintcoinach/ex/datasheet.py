@@ -233,6 +233,8 @@ class DataSheet(IDataSheet[T]):
 
         partial_file_name = PARTIAL_FILE_NAME_FORMAT % (self.header.name, _range.start, self.language.get_suffix())
         file = self.collection.pack_collection.get_file(partial_file_name)
+        if file is None:
+            raise FileNotFoundError(partial_file_name)
 
         return file
 
