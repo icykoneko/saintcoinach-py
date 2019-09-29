@@ -16,6 +16,7 @@ from .image_command import ImageCommand
 from .language_command import LanguageCommand
 from .raw_command import RawCommand
 from .raw_exd_command import RawExdCommand
+from .raw_sheet_command import RawSheetCommand
 from .ui_command import UiCommand
 
 
@@ -29,6 +30,7 @@ class XivShell(cmd.Cmd,
                LanguageCommand,
                RawCommand,
                RawExdCommand,
+               RawSheetCommand,
                UiCommand):
     prompt = '(xiv) '
 
