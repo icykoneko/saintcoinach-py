@@ -103,10 +103,10 @@ class DataRow(DataRowBase):
         self.__is_read = True
 
     def __getitem__(self, item):
-        raise RuntimeError('Invalid Operation')
+        raise RuntimeError('Invalid Operation: Cannot get column on Variant 2 DataRow. Use GetSubRow instead.')
 
     def get_raw(self, column_index: int, **kwargs):
-        raise RuntimeError('Invalid Operation')
+        raise RuntimeError('Invalid Operation: Cannot get column on Variant 2 DataRow. Use GetSubRow instead.')
 
 
 class RelationalDataRow(DataRow, IRelationalDataRow):
@@ -117,7 +117,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
     def __str__(self):
         def_col = self.sheet.header.default_column
         if def_col is not None:
-            return "%s" % self[def_col.index]
+            return "%s" % self.get_sub_row(def_col.index).default_value
         else:
             return "%s#%u" % (self.sheet.header.name, self.key)
 
