@@ -67,12 +67,15 @@ class ARealmReversed(object):
         _def = RelationDefinition(version=version)
         for sheet_file_name in _SAINTCOINACH_HOME.joinpath('Definitions').glob('*.json'):
             _json = sheet_file_name.read_text(encoding='utf-8-sig')
-            obj = json.loads(_json)
-            sheet_def = SheetDefinition.from_json(obj)
-            _def.sheet_definitions.append(sheet_def)
+            try:
+                obj = json.loads(_json)
+                sheet_def = SheetDefinition.from_json(obj)
+                _def.sheet_definitions.append(sheet_def)
 
-            if not self._game_data.sheet_exists(sheet_def.name):
-                logging.warning('Defined sheet %s is missing', sheet_def.name)
+                if not self._game_data.sheet_exists(sheet_def.name):
+                    logging.warning('Defined sheet %s is missing', sheet_def.name)
+            except json.JSONDecodeError as exc:
+                logging.error('Failed to decode %s: %s', sheet_file_name, str(exc))
 
         return _def
 

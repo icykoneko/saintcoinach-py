@@ -52,8 +52,14 @@ class RawSheetCommand(IXivShellCommandMixin):
                         self._realm.game_data.active_language.get_suffix())
                     data_file = sheet.collection.pack_collection.get_file(data_file_name)
                     if data_file is None:
-                        logger.error('Invalid data file: %s', data_file_name)
-                        continue
+                        data_file_name = PARTIAL_FILE_NAME_FORMAT % (
+                            sheet.header.name,
+                            _range.start,
+                            "")
+                        data_file = sheet.collection.pack_collection.get_file(data_file_name)
+                        if data_file is None:
+                            logger.error('Invalid data file: %s', data_file_name)
+                            continue
 
                     data_target = Path(self._realm.game_version, data_file_name)
                     if not data_target.parent.exists():
