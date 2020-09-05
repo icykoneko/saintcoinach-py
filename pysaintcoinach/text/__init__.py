@@ -126,9 +126,11 @@ class XivStringDecoder(object):
         self.set_decoder(TagType.Clickable.value,
                          lambda i,t,l: self._decode_generic_element_with_variable_arguments(i, t, l, 1, 0x7fffffff))
         self.set_decoder(TagType.Color.value, self._decode_color)
+        self.set_decoder(TagType.Color2.value, self._decode_color)
         self.set_decoder(TagType.CommandIcon.value,
                          lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
         self.set_decoder(TagType.Dash.value, lambda i,t,l: nodes.StaticString(self.dash))
+        self.set_decoder(TagType.DecimalValue.value, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.Emphasis.value, self._decode_generic_surrounding_tag)
         self.set_decoder(TagType.Emphasis2.value, self._decode_generic_surrounding_tag)
         # TODO: Fixed
@@ -137,9 +139,13 @@ class XivStringDecoder(object):
         self.set_decoder(TagType.Highlight.value, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.If.value, self._decode_if)
         self.set_decoder(TagType.IfEquals.value, self._decode_if_equals)
+        self.set_decoder(TagType.IfSelf.value, self._decode_if_self)
         # Indent
         self.set_decoder(TagType.InstanceContent.value, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
         self.set_decoder(TagType.LineBreak.value, lambda i,t,l: nodes.StaticString(self.new_line))
+        self.set_decoder(TagType.Name.value, lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
+        self.set_decoder(TagType.OrdinalNumber.value, lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
+        self.set_decoder(TagType.Sfx.value, lambda i, t, l: self._decode_generic_element(i, t, l, 1, False))
         # Sheets
         # Sheet name, Row[, Column[, Parameters]+]
         self.set_decoder(TagType.Sheet.value,
@@ -156,11 +162,18 @@ class XivStringDecoder(object):
         self.set_decoder(TagType.Split.value, lambda i,t,l: self._decode_generic_element(i, t, l, 3, False))
         self.set_decoder(TagType.Switch.value, self._decode_switch)
         self.set_decoder(TagType.Time.value, lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
-        self.set_decoder(TagType.TwoDigitValue, lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
+        self.set_decoder(TagType.TwoDigitValue.value, lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
         # Unknowns
+        self.set_decoder(TagType.UIForeground.value, self._decode_ui_color)
+        self.set_decoder(TagType.UIGlow.value, self._decode_ui_color)
         self.set_decoder(TagType.Value.value,
-                         lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
+                         lambda i,t,l: self._decode_generic_element(i, t, l, 1, False))
         self.set_decoder(TagType.ZeroPaddedValue.value, self._decode_zero_padded_value)
+
+        self.set_decoder(TagType.Unknown2D.value,
+                         lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
+        self.set_decoder(TagType.Unknown2F.value,
+                         lambda i,t,l: self._decode_generic_element(i, t, l, 0, True))
 
     def set_decoder(self, tag: TagType, decoder: TagDecoder):
         self.__tag_decoders[tag] = decoder
@@ -327,6 +340,13 @@ class XivStringDecoder(object):
         color = self._decode_expression(input, t)
         return nodes.OpenTag(tag, color)
 
+    def _decode_ui_color(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
+        t = _read_byte(input)
+        if length == 1 and t == 0x01:
+            return nodes.CloseTag(tag)
+        color = self._decode_expression(input, t)
+        return nodes.OpenTag(tag, color)
+
     def _decode_format(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
         end = input.tell() + length
 
@@ -350,6 +370,14 @@ class XivStringDecoder(object):
         true_value, false_value = self._decode_conditional_outputs(input, end)
 
         return nodes.IfEqualsElement(tag, left, right, true_value, false_value)
+
+    def _decode_if_self(self, input: io.BytesIO, tag: TagType, length: int) -> INode:
+        end = input.tell() + length
+
+        left = self._decode_expression(input)
+        true_value, false_value = self._decode_conditional_outputs(input, end)
+
+        return nodes.IfSelfElement(tag, left, true_value, false_value)
 
     def _decode_conditional_outputs(self, input: io.BytesIO, end: int) -> Tuple[INode, INode]:
         true_value = None  # type: INode

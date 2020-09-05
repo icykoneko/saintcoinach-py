@@ -67,12 +67,14 @@ class TagType(Enum):
     Time = 0x07  # TODO: It seems to set the time used further on.
     If = 0x08
     Switch = 0x09
-    IfEquals = 0x0C
-    Unknown0A = 0x0A
+    Name = 0x0A  # Used in wedding and PvP messages. Returns the character's full name.
+    IfEquals = 0x0C  # (left, right, true[, false)
+    IfSelf = 0x0F  # Added in 2020.02.11.0000.0000: Similar but omits right
+    #                IfSelf == IfEquals(<left>, ObjectParameter(1), true[, false])
     LineBreak = 0x10
     Gui = 0x12
     Color = 0x13
-    Unknown14 = 0x14
+    Color2 = 0x14
     SoftHyphen = 0x16
     Unknown17 = 0x17
     Emphasis2 = 0x19
@@ -85,7 +87,7 @@ class TagType(Enum):
     Value = 0x20
     Format = 0x22
     TwoDigitValue = 0x24
-    Unknown26 = 0x26
+    DecimalValue = 0x26
     Sheet = 0x28
     Highlight = 0x29
     Clickable = 0x2B
@@ -98,8 +100,8 @@ class TagType(Enum):
     SheetDe = 0x32
     SheetFr = 0x33
     InstanceContent = 0x40
-    UIForeground = 0x48
-    UIGlow = 0x49
+    UIForeground = 0x48  # Lookup into UIColor[n]/UIForeground
+    UIGlow = 0x49  # Lookup into UIColor[n]/UIGlow
     ZeroPaddedValue = 0x50
-    Unknown51 = 0x51
-    Unknown60 = 0x60
+    OrdinalNumber = 0x51
+    Sfx = 0x60  # Usually for log messages, causes SE[n] to play when printed

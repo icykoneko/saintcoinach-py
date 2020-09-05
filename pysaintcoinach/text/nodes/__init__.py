@@ -140,8 +140,8 @@ class Comparison(IExpressionNode):
         s += StringTokens.ARGUMENTS_OPEN
         if self.left is not None:
             s += str(self.left)
-        s += StringTokens.ARGUMENTS_SEPARATOR
         if self.right is not None:
+            s += StringTokens.ARGUMENTS_SEPARATOR
             s += str(self.right)
         s += StringTokens.ARGUMENTS_CLOSE
         return s
@@ -324,6 +324,23 @@ class IfEqualsElement(IfElement):
         super(IfEqualsElement, self).__init__(tag,
                                               Comparison(DecodeExpressionType.Equal, left_value, right_value),
                                               true_value, right_value)
+
+
+class IfSelfElement(IfElement):
+    def __init__(self, tag: TagType, left_value: INode, true_value: INode, false_value: INode):
+        super(IfSelfElement, self).__init__(tag,
+                                            Comparison(DecodeExpressionType.Equal, left_value, None),
+                                            true_value, false_value)
+
+    def evaluate(self, parameters: 'evaluation.EvaluationParameters'):
+        # Condition is a little wonky in order to format string correctly.
+        condition = Comparison(DecodeExpressionType.Equal,
+                               self.condition.left,
+                               Parameter(DecodeExpressionType.ObjectParameter, StaticInteger(1)))
+        eval_cond = condition.evaluate(parameters)
+        if parameters.function_provider.to_boolean(eval_cond):
+            return self.true_value.evaluate(parameters)
+        return self.false_value.evaluate(parameters)
 
 
 class OpenTag(IExpressionNode):
