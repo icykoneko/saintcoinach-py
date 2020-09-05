@@ -178,7 +178,8 @@ class Pack(Iterable):
             return
 
         if len(self._data_streams) > 0:
-            raise RuntimeError("Invalid operation")
+            logger.error("Failed to keep pack %r in memory." % self.id)
+            return
 
         self._keep_in_memory = value
         if not value:
