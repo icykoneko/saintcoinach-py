@@ -11,7 +11,9 @@ class ExdHelper(object):
     def save_as_csv(sheet: IRelationalSheet,
                     language: Language,
                     path: str,
-                    write_raw: bool):
+                    write_raw: bool,
+                    tracker=None,
+                    cancel_event=None):
         with open(path, 'w', encoding='utf8', newline='') as s:
             writer = csv.writer(s)
             index_line = ['key']
@@ -30,38 +32,37 @@ class ExdHelper(object):
             writer.writerow(name_line)
             writer.writerow(type_line)
 
-            ExdHelper.write_rows(writer, sheet, language, col_indices, write_raw)
+            ExdHelper.write_rows(writer, sheet, language, col_indices, write_raw,
+                                 tracker=tracker, cancel_event=cancel_event)
 
     @staticmethod
     def write_rows(writer,
                    sheet: ISheet,
                    language: Language,
                    col_indices: Iterable[int],
-                   write_raw: bool):
+                   write_raw: bool,
+                   tracker=None,
+                   cancel_event=None):
         from .ex import ISheet, IRow
         from .xiv import XivRow
         from . import ex
         from .ex import variant2
-        from tqdm import tqdm
 
+        if tracker is not None:
+            tracker.reset(len(sheet))
+            tracker.set_description('%s%s' % (sheet.name, language.get_suffix()))
         if sheet.header.variant == 1:
             ExdHelper._write_rows_core(writer,
-                                       tqdm(cast(ISheet[IRow], sheet),
-                                            unit='row', leave=True, ncols=150,
-                                            desc='%s%s' % (sheet.name,
-                                                           language.get_suffix()),
-                                            bar_format='{l_bar:>50.50}{bar}{r_bar:50}'),
+                                       cast(ISheet[IRow], sheet),
                                        language,
-                                       col_indices, write_raw, ExdHelper.get_row_key)
+                                       col_indices, write_raw, ExdHelper.get_row_key,
+                                       tracker=tracker, cancel_event=cancel_event)
         else:
             ExdHelper._write_rows_core(writer,
-                                       tqdm(cast(ISheet[XivRow], sheet),
-                                            unit='row', leave=True, ncols=150,
-                                            desc='%s%s' % (sheet.name,
-                                                           language.get_suffix()),
-                                            bar_format='{l_bar:>50.50}{bar}{r_bar:50}'),
+                                       cast(ISheet[XivRow], sheet),
                                        language,
-                                       col_indices, write_raw, ExdHelper.get_sub_row_key)
+                                       col_indices, write_raw, ExdHelper.get_sub_row_key,
+                                       tracker=tracker, cancel_event=cancel_event)
 
 
     @staticmethod
@@ -70,13 +71,18 @@ class ExdHelper(object):
                          language: Language,
                          col_indices: Iterable[int],
                          write_raw: bool,
-                         write_key):
-        # for row in sorted(rows, key=lambda x: x.key):
+                         write_key,
+                         tracker=None,
+                         cancel_event=None):
         for row in rows:
             from .ex import ISheet, IRow, IMultiRow
             from .xiv import XivRow, IXivRow
 
             use_row = row
+
+            if cancel_event is not None:
+                if cancel_event.is_set():
+                    return
 
             if isinstance(use_row, IXivRow):
                 use_row = cast(IXivRow, row).source_row
@@ -92,6 +98,9 @@ class ExdHelper(object):
                 row_line.append(v)
 
             writer.writerow(row_line)
+
+            if tracker is not None:
+                tracker.update()
 
     @staticmethod
     def convert_rows(sheet: ISheet, language: Language = Language.none, cols = None):
