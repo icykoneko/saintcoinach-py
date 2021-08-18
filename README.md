@@ -1,10 +1,10 @@
 # pysaintcoinach
 
-A Python port of the popular [Saint Coinach](https://github.com/ufx/SaintCoinach) library for extracting game assets and reading game assets from **Final Fantasy XIV**.
+A Python port of the popular [Saint Coinach](https://github.com/xivapi/SaintCoinach) library for extracting game assets and reading game assets from **Final Fantasy XIV**.
 
 This library aims to provide a complete Python implementation of the C# library, attempting to showcase all the potential of the Python programming language, and to enable quick development of scripts for other projects.
 
-Special thanks to @[ufx](https://github.com/ufx) and all contributors to the Saint Coinach library.
+Special thanks to @[xivapi](https://github.com/xivapi) and all contributors to the Saint Coinach library.
 
 ## Functionality
 
@@ -22,7 +22,7 @@ Special thanks to @[ufx](https://github.com/ufx) and all contributors to the Sai
 
 ### Not implemented or ported
 
-* Self-updating feature. This port relies on the original Saint Coinach library for `ex.json` mappings.
+* Self-updating feature. This port relies on the original Saint Coinach library for mappings.
 
 ## Cloning this Repo
 
@@ -126,12 +126,12 @@ The `xivshell` module is a Python port of `SaintCoinach.Cmd`.  It is a very basi
 
 ## Contributing to the code base
 
-As this library is a port, any feature-related contributions should be directed towards [Saint Coinach](https://github.com/ufx/SaintCoinach). Bug-fixes with this port may be contributed.
+As this library is a port, any feature-related contributions should be directed towards [Saint Coinach](https://github.com/xivapi/SaintCoinach). Bug-fixes with this port may be contributed.
 
 ## Licenses and Attribution
 
-The majority of this library's functionality was ported from [Saint Coinach](https://github.com/ufx/SaintCoinach) and is licensed under the WTFPL. This port is licensed under the terms of the MIT license. For more information, please refer to [LICENSE](LICENSE).
+The majority of this library's functionality was ported from [Saint Coinach](https://github.com/xivapi/SaintCoinach) and is licensed under the WTFPL. This port is licensed under the terms of the MIT license. For more information, please refer to [LICENSE](LICENSE).
 
-FINAL FANTASY XIV © 2010 - 2019 SQUARE ENIX CO., LTD. All Rights Reserved.
+FINAL FANTASY XIV © 2010 - 2021 SQUARE ENIX CO., LTD. All Rights Reserved.
 
 FINAL FANTASY, FINAL FANTASY XIV, FFXIV, and SQUARE ENIX are registered trademarks of Square Enix Holdings Co., Ltd.
