@@ -2,5 +2,6 @@ __pycache__
 .idea
 .vscode
 pyvirt
+pyvirt-kern
 tmp
 *.pyc

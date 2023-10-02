@@ -1,4 +1,4 @@
-Pillow ~= 6.2
+Pillow ~= 9.5
 construct ~= 2.9.45
 PyYAML ~= 5.1
 tqdm
