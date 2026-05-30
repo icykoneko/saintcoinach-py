@@ -19,9 +19,9 @@ class IValueConverter(object):
     def convert(self, row: IDataRow, raw_value: object) -> object:
         pass
 
-    @abstractmethod
-    def to_json(self) -> 'OrderedDict':
-        pass
+    # @abstractmethod
+    # def to_json(self) -> 'OrderedDict':
+    #     pass
 
     @abstractmethod
     def resolve_references(self, sheet_def: SheetDefinition):

@@ -10,12 +10,12 @@ class Column(object):
     Class for representing columns inside EX files.
     """
 
-    def __init__(self, header: 'ex.Header', index: int, buffer: bytes, offset: int):
+    def __init__(self, header: 'ex.Header', column_based_index: int, buffer: bytes, offset: int):
         TYPE_OFFSET = 0x00
         POSITION_OFFSET = 0x02
 
         self.__header = header
-        self.__index = index
+        self.__column_based_index = column_based_index
         self.__type, = struct.unpack('>H', buffer[offset + TYPE_OFFSET:][:2])
         self.__offset, = struct.unpack('>H', buffer[offset + POSITION_OFFSET:][:2])
         self.__reader = DataReader.get_reader(self.type)
@@ -28,11 +28,22 @@ class Column(object):
         return self.__header
 
     @property
-    def index(self) -> int:
+    def column_based_index(self) -> int:
         """
         Gets the index of the column inside the EX file.
         """
-        return self.__index
+        return self.__column_based_index
+
+    @property
+    def offset_based_index(self) -> int:
+        """
+        Gets the index of the column based on offset position
+        """
+        return self.__offset_based_index
+
+    @offset_based_index.setter
+    def offset_based_index(self, value: int):
+        self.__offset_based_index = value
 
     @property
     def type(self) -> int:

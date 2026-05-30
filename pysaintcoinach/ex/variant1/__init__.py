@@ -39,14 +39,14 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
     def __str__(self):
         def_col = self.sheet.header.default_column
         if def_col is not None:
-            return "%s" % self[def_col.index]
+            return "%s" % self[def_col.column_based_index]
         else:
             return "%s#%u" % (self.sheet.header.name, self.key)
 
     @property
     def default_value(self) -> object:
         def_col = self.sheet.header.default_column
-        return self[def_col.index] if def_col is not None else None
+        return self[def_col.column_based_index] if def_col is not None else None
 
     def __getitem__(self, item: str) -> object:
         if isinstance(item, int):
@@ -60,7 +60,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
         col = self.sheet.header.find_column(column_name)
         if col is None:
             raise KeyError(column_name)
-        return self[col.index]
+        return self[col.column_based_index]
 
     def get_raw(self, column_name: Union[str, int] = None, **kwargs) -> object:
         if 'column_index' in kwargs:

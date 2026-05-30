@@ -35,7 +35,7 @@ class RelationalDataIndex(Generic[T]):
 
     def _build_index(self):
         self.__indexed_rows = {}
-        index = self.index_column.index
+        index = self.index_column.column_based_index
         for row in self.source_sheet:
             value = row.get_raw(column_index=index)
             self.__indexed_rows[int(value)] = row

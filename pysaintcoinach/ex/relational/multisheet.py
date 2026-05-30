@@ -71,7 +71,7 @@ class RelationalMultiRow(MultiRow, IRelationalMultiRow):
     def __str__(self):
         def_col = self.sheet.header.default_column
         if def_col is not None:
-            return "%s" % self[def_col.index]
+            return "%s" % self[def_col.column_based_index]
         else:
             return "%s#%u" % (self.sheet.header.name, self.key)
 

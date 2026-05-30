@@ -8,6 +8,7 @@ from ...datasheet import IDataRow
 from ..sheet import IRelationalRow, IRelationalSheet
 from ..valueconverter import IValueConverter
 from ..definition import SheetDefinition
+from ..definition.exdschema.schema import Condition
 
 
 class IRowProducer(object):
@@ -68,12 +69,17 @@ class ColumnProjection(IProjectable):
 class LinkCondition(object):
     def __init__(self, **kwargs):
         self.key_column_name = kwargs.get('key_column_name', None)  # type: str
-        self.key_column_index = kwargs.get('key_column_index', 0)  # type: int
+        self.key_column_column_based_index = kwargs.get('key_column_column_based_index', -1)  # type: int
+        self.key_column_offset_based_index = kwargs.get('key_column_offset_based_index', 0)  # type: int
         self.value = kwargs.get('value', None)  # type: object
         self.__value_type_changed = False
 
     def match(self, row: IDataRow) -> bool:
-        row_value = row[self.key_column_index]
+        if self.key_column_column_based_index == -1:
+            self.key_column_column_based_index = next(map(lambda x: x.column_based_index,
+                                                          filter(lambda c: c.offset_based_index == self.key_column_offset_based_index,
+                                                                 row.sheet.header.columns)))
+        row_value = row[self.key_column_column_based_index]
         if not self.__value_type_changed and row_value is not None:
             self.value = cast(type(row_value), self.value)
             self.__value_type_changed = True
@@ -82,9 +88,6 @@ class LinkCondition(object):
 
 class SheetLinkData(object):
     def __init__(self, **kwargs):
-        self.projected_column_name = kwargs.get('projected_column_name', None)  # type: str
-        self.key_column_name = kwargs.get('key_column_name', None)  # type: str
-
         self.row_producer = kwargs.get('row_producer', None)  # type: IRowProducer
         self.projection = kwargs.get('projection', None)  # type: IProjectable
 
@@ -96,10 +99,6 @@ class SheetLinkData(object):
 
     def to_json(self):
         obj = OrderedDict()
-        if self.projected_column_name is not None:
-            obj['project'] = self.projected_column_name
-        if self.key_column_name is not None:
-            obj['key'] = self.key_column_name
         if self.when is not None:
             obj['when'] = OrderedDict()
             obj['when']['key'] = self.when.key_column_name
@@ -117,19 +116,8 @@ class SheetLinkData(object):
         else:
             raise Exception("complexlink link must contain either 'sheet' or 'sheets'.")
 
-        if obj.get('project', None) is None:
-            data.projection = IdentityProjection()
-        else:
-            data.projected_column_name = str(obj['project'])
-            data.projection = ColumnProjection(
-                projected_column_name=data.projected_column_name)
-
-        if obj.get('key', None) is None:
-            data.row_producer = PrimaryKeyRowProducer()
-        else:
-            data.key_column_name = str(obj['key'])
-            data.row_producer = IndexedRowProducer(
-                key_column_name=data.key_column_name)
+        data.projection = IdentityProjection()
+        data.row_producer = PrimaryKeyRowProducer()
 
         when = obj.get('when', None)
         if when is not None:
@@ -137,6 +125,25 @@ class SheetLinkData(object):
             condition.key_column_name = str(when['key'])
             condition.value = when['value']  # Somehow convert to object?
             data.when = condition
+
+        return data
+
+    @staticmethod
+    def from_yaml(condition: Condition, when: int):
+        this_case = condition.cases[when]
+
+        data: SheetLinkData = None
+        if this_case.count == 1:
+            data = SingleSheetLinkData(sheet_name=this_case[0])
+        else:
+            data = MultiSheetLinkData(sheet_names=this_case)
+
+        data.projection = IdentityProjection()
+        data.row_producer = PrimaryKeyRowProducer()
+
+        data.when = LinkCondition(
+            key_column_name=condition.switch,
+            value=when)
 
         return data
 
@@ -210,16 +217,21 @@ class ComplexLinkConverter(IValueConverter):
 
         return None
 
-    def to_json(self):
-        obj = OrderedDict()
-        obj['type'] = 'complexlink'
-        obj['links'] = [l.to_json() for l in self.__links]
-        return obj
+    # def to_json(self):
+    #     obj = OrderedDict()
+    #     obj['type'] = 'complexlink'
+    #     obj['links'] = [l.to_json() for l in self.__links]
+    #     return obj
 
     @staticmethod
     def from_json(obj: dict):
         return ComplexLinkConverter(
             links=[SheetLinkData.from_json(o) for o in obj['links']])
+
+    @staticmethod
+    def from_yaml(condition: Condition):
+        return ComplexLinkConverter(
+            links=[SheetLinkData.from_yaml(condition, o) for o in condition.cases])
 
     def resolve_references(self, sheet_def: SheetDefinition):
         for link in self.__links:
@@ -232,4 +244,4 @@ class ComplexLinkConverter(IValueConverter):
                     raise Exception("Can't find conditional key column '%s' in sheet '%s'" %
                                     (link.when.key_column_name, sheet_def.name))
 
-                link.when.key_column_index = key_definition.index
+                link.when.key_column_offset_based_index = key_definition.offset_based_index

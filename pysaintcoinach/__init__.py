@@ -2,21 +2,23 @@ from pathlib import Path
 import json
 import os
 import logging
+import yaml
 
 try:
     _SCRIPT_PATH = os.path.abspath(__path__)
 except:
     _SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
 
-_SAINTCOINACH_HOME = Path(_SCRIPT_PATH, '..', 'SaintCoinach', 'SaintCoinach')
+_EXDSCHEMA_HOME = Path(_SCRIPT_PATH, '..', 'EXDSchema')
 
 from .ex import Language
 from .ex.relational.definition import RelationDefinition, SheetDefinition
+from .ex.relational.definition.exdschema import schema_util
+from .ex.relational.definition.exdschema import Sheet as SchemaSheet
 from .xiv import XivCollection
 from .pack import PackCollection
 from .indexfile import Directory
 from .file import File
-
 
 __all__ = ['ARealmReversed']
 
@@ -59,23 +61,19 @@ class ARealmReversed(object):
         self._game_data.definition.compile()
 
     def __read_definition(self) -> RelationDefinition:
-        version_path = _SAINTCOINACH_HOME.joinpath('Definitions', 'game.ver')
-        if not version_path.exists():
-            raise RuntimeError('Definitions\\game.ver must exist.')
-
-        version = version_path.read_text().strip()
-        _def = RelationDefinition(version=version)
-        for sheet_file_name in _SAINTCOINACH_HOME.joinpath('Definitions').glob('*.json'):
-            _json = sheet_file_name.read_text(encoding='utf-8-sig')
+        _def = RelationDefinition(version='latest')
+        for sheet_file_name in _EXDSCHEMA_HOME.glob('*.yml'):
+            _yaml = sheet_file_name.read_text()
             try:
-                obj = json.loads(_json)
-                sheet_def = SheetDefinition.from_json(obj)
+                sheet = SchemaSheet.from_yaml(_yaml)
+                sheet = schema_util.flatten(sheet)
+                sheet_def = SheetDefinition.from_yaml(sheet)
                 _def.sheet_definitions.append(sheet_def)
 
                 if not self._game_data.sheet_exists(sheet_def.name):
                     logging.warning('Defined sheet %s is missing', sheet_def.name)
-            except json.JSONDecodeError as exc:
-                logging.error('Failed to decode %s: %s', sheet_file_name, str(exc))
+            except yaml.error.YAMLError as exc:
+                logging.exception('Failed to decode %s: %s', sheet_file_name, str(exc))
 
         return _def
 

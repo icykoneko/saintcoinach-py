@@ -109,6 +109,17 @@ class Header(object):
             self.__columns += [self.create_column(i, buffer, position)]
             position += LENGTH
 
+        def _sort_by_offset_key(col):
+            bits = col.offset * 8
+            pos_bits = col.type - 0x19  # The first packedbits type
+            if pos_bits > 0:
+                bits += pos_bits
+            return bits
+        sorted_columns = sorted(self.__columns, key=_sort_by_offset_key)
+        for i in range(len(sorted_columns)):
+            remap = sorted_columns[i].column_based_index
+            self.__columns[remap].offset_based_index = i
+
         return position
 
     def __read_partial_files(self, buffer: bytes, position):

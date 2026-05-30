@@ -25,7 +25,7 @@ class SubRow(DataRowBase, IRelationalDataRow):
     @property
     def default_value(self) -> object:
         def_col = self.sheet.header.default_column
-        return self[def_col.index] if def_col is not None else None
+        return self[def_col.column_based_index] if def_col is not None else None
 
     def __getitem__(self, item: str) -> object:
         if isinstance(item, int):
@@ -34,7 +34,7 @@ class SubRow(DataRowBase, IRelationalDataRow):
         col = self.sheet.header.find_column(item)
         if col is None:
             raise KeyError
-        return self[col.index]
+        return self[col.column_based_index]
 
     def get_raw(self, column_name: Union[str, int] = None, **kwargs) -> object:
         if 'column_index' in kwargs:
@@ -45,7 +45,7 @@ class SubRow(DataRowBase, IRelationalDataRow):
         column = self.sheet.header.find_column(column_name)
         if column is None:
             raise KeyError
-        return self.get_raw(column.index)
+        return self.get_raw(column.column_based_index)
 
 
 class DataRow(DataRowBase):
@@ -117,7 +117,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
     def __str__(self):
         def_col = self.sheet.header.default_column
         if def_col is not None:
-            return "%s" % self.get_sub_row(def_col.index).default_value
+            return "%s" % self.get_sub_row(def_col.column_based_index).default_value
         else:
             return "%s#%u" % (self.sheet.header.name, self.key)
 
@@ -127,7 +127,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
     @property
     def default_value(self) -> object:
         def_col = self.sheet.header.default_column
-        return self[def_col.index] if def_col is not None else None
+        return self[def_col.column_based_index] if def_col is not None else None
 
     def __getitem__(self, item: str) -> object:
         if isinstance(item, int):
@@ -136,7 +136,7 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
         col = self.sheet.header.find_column(item)
         if col is None:
             raise KeyError
-        return self[col.index]
+        return self[col.column_based_index]
 
     def get_raw(self, column_name: Union[str, int] = None, **kwargs) -> object:
         if 'column_index' in kwargs:
@@ -147,4 +147,4 @@ class RelationalDataRow(DataRow, IRelationalDataRow):
         column = self.sheet.header.find_column(column_name)
         if column is None:
             raise KeyError
-        return super(RelationalDataRow, self).get_raw(column.index)
+        return super(RelationalDataRow, self).get_raw(column.column_based_index)

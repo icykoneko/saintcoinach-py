@@ -31,7 +31,11 @@ class RelationalHeader(Header):
 
     @property
     def sheet_definition(self) -> 'ex.relational.definition.SheetDefinition':
-        return self.collection.definition.get_sheet(self.name)
+        _def = self.collection.definition.get_sheet(self.name)
+        if _def is not None:
+            if not _def.is_post_processed:
+                _def.post_process(self.__columns)
+        return _def
 
     def __init__(self, collection, name, file):
         super(RelationalHeader, self).__init__(collection, name, file)

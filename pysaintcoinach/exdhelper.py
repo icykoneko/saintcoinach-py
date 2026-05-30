@@ -22,11 +22,11 @@ class ExdHelper(object):
 
             col_indices = []
             for col in sheet.header.columns:
-                index_line.append(col.index)
+                index_line.append(col.column_based_index)
                 name_line.append(col.name)
                 type_line.append(col.value_type)
 
-                col_indices.append(col.index)
+                col_indices.append(col.column_based_index)
 
             writer.writerow(index_line)
             writer.writerow(name_line)
@@ -144,12 +144,12 @@ class ExdHelper(object):
         for col in cols:
             v = None
             if language == Language.none or multi_row is None:
-                v = use_row[col.index]
+                v = use_row[col.column_based_index]
             else:
-                v = multi_row[(col.index, language)]
+                v = multi_row[(col.column_based_index, language)]
 
             if v is not None:
-                out_row[col.name or col.index] = str(v)
+                out_row[col.name or col.column_based_index] = str(v)
 
         return key, out_row
 

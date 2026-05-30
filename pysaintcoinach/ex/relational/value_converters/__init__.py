@@ -1,6 +1,7 @@
 from typing import List, Dict
 import json
 from collections import OrderedDict
+import logging
 
 from ...datasheet import IDataRow
 from ..sheet import IRelationalRow
@@ -42,10 +43,10 @@ class ColorConverter(IValueConverter):
 
         return argb
 
-    def to_json(self):
-        obj = OrderedDict()
-        obj['type'] = 'color'
-        return obj
+    # def to_json(self):
+    #     obj = OrderedDict()
+    #     obj['type'] = 'color'
+    #     return obj
 
     @staticmethod
     def from_json(obj: dict):
@@ -104,13 +105,17 @@ class IconConverter(IValueConverter):
             return None
 
         sheet = row.sheet
-        return imaging.IconHelper.get_icon(sheet.collection.pack_collection,
-                                           nr, sheet.language)
+        try:
+            return imaging.IconHelper.get_icon(sheet.collection.pack_collection,
+                                               nr, sheet.language)
+        except Exception as exc:
+            logging.error("Failed to convert Icon: %s", exc)
+            return None
 
-    def to_json(self):
-        obj = OrderedDict()
-        obj['type'] = 'icon'
-        return obj
+    # def to_json(self):
+    #     obj = OrderedDict()
+    #     obj['type'] = 'icon'
+    #     return obj
 
     @staticmethod
     def from_json(obj: dict):
@@ -161,6 +166,12 @@ class MultiReferenceConverter(IValueConverter):
     def from_json(obj: dict):
         converter = MultiReferenceConverter()
         converter.targets = [str(t) for t in obj.get('targets', [])]
+        return converter
+
+    @staticmethod
+    def from_yaml(field_targets: list[str]):
+        converter = MultiReferenceConverter()
+        converter.targets = field_targets
         return converter
 
     def resolve_references(self, sheet_def: SheetDefinition):
@@ -228,6 +239,12 @@ class SheetLinkConverter(IValueConverter):
     def from_json(obj: dict):
         converter = SheetLinkConverter()
         converter.target_sheet = obj.get('target', None)
+        return converter
+
+    @staticmethod
+    def from_yaml(target_name: str):
+        converter = SheetLinkConverter()
+        converter.target_sheet = target_name
         return converter
 
     def resolve_references(self, sheet_def: SheetDefinition):

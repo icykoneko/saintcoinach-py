@@ -80,7 +80,7 @@ class DataRowBase(IDataRow):
     def items(self):
         item_dict = OrderedDict()
         for c in self.sheet.header.columns:
-            item_dict[c.name] = self[c.index]
+            item_dict[c.name] = self[c.column_based_index]
         return item_dict
 
 
