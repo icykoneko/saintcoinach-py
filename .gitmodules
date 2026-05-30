@@ -1,3 +1,7 @@
 [submodule "SaintCoinach"]
 	path = SaintCoinach
 	url = ../../xivapi/SaintCoinach.git
+[submodule "EXDSchema"]
+	path = EXDSchema
+	url = ../../xivdev/EXDSchema
+	branch = latest

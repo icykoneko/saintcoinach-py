@@ -132,6 +132,8 @@ As this library is a port, any feature-related contributions should be directed 
 
 The majority of this library's functionality was ported from [Saint Coinach](https://github.com/xivapi/SaintCoinach) and is licensed under the WTFPL. This port is licensed under the terms of the MIT license. For more information, please refer to [LICENSE](LICENSE).
 
+The schema definitions for this library come from [xivdev/EXDSchema](https://github.com/xivdev/EXDSchema).
+
 FINAL FANTASY XIV © 2010 - 2021 SQUARE ENIX CO., LTD. All Rights Reserved.
 
 FINAL FANTASY, FINAL FANTASY XIV, FFXIV, and SQUARE ENIX are registered trademarks of Square Enix Holdings Co., Ltd.
