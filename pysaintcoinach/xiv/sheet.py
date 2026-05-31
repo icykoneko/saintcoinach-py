@@ -59,6 +59,9 @@ class XivRow(IXivRow):
     def __repr__(self):
         return str(self)
 
+    def __int__(self):
+        return self.key
+
     @property
     def default_value(self): return self.__source_row.default_value
 
