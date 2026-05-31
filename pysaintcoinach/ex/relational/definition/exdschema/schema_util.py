@@ -41,14 +41,18 @@ def _create_field(base_field: Field, field_is_array_element: bool, index: int, h
         condition=base_field.condition,
         targets=base_field.targets)
 
-    name = f"{base_field.name}"
+    base_field_name = base_field.name
+    if base_field_name is not None:
+        name = base_field_name
 
-    if field_is_array_element:
-        name = f"{name}[{index}]"
+        if field_is_array_element:
+            name = f"{name}[{index}]"
+    else:
+        name = None  # This happens when you have an array of target links
 
     if hierarchy is not None:
         added_field.name = '.'.join(hierarchy)
-        if name:
+        if name is not None:
             added_field.name += f".{name}"
     else:
         added_field.name = name
