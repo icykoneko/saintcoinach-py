@@ -27,11 +27,11 @@ class GCScripShopItem(XivSubRow, IShopListing, IShopListingItem):
     @property
     def required_grand_company_rank(self) -> 'GrandCompanyRank':
         # TODO: Use `GrandCompanyRank` type.
-        return self['Required{GrandCompanyRank}']
+        return self['RequiredGrandCompanyRank']
 
     @property
     def gc_seals_cost(self) -> int:
-        return self.as_int32('Cost{GCSeals}')
+        return self.as_int32('CostGCSeals')
 
     @property
     def sort_key(self) -> int:

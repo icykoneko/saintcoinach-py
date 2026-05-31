@@ -54,12 +54,12 @@ class MasterpieceSupplyDuty(XivRow):
             self.__masterpiece_supply_duty = duty
             self.__required_item = duty.as_T(Item, 'RequiredItem', index)
             self.__quantity = duty.as_int32('Quantity', index)
-            self.__collectability_high_bonus = duty.as_int32('Collectability{HighBonus}', index)
-            self.__collectability_bonus = duty.as_int32('Collectability{Bonus}', index)
-            self.__collectability_base = duty.as_int32('Collectability{Base}', index)
+            self.__collectability_high_bonus = duty.as_int32('CollectabilityHighBonus', index)
+            self.__collectability_bonus = duty.as_int32('CollectabilityBonus', index)
+            self.__collectability_base = duty.as_int32('CollectabilityBase', index)
             self.__exp_modifier = duty.as_int32('ExpModifier', index)
-            self.__scrip_rewards = duty.as_int32('Reward{Scrips}', index)
-            self.__max_class_job_level = duty.as_int32('ClassJobLevel{Max}', index)
+            self.__scrip_rewards = duty.as_int32('RewardScrips', index)
+            self.__max_class_job_level = duty.as_int32('ClassJobLevelMax', index)
             self.__stars = duty.as_int32('Stars', index)
 
             bonus_multiplier_row = duty.as_T(XivRow, 'BonusMultiplier', index)

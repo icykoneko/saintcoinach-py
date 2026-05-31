@@ -20,14 +20,14 @@ class FishingSpot(XivRow, IItemSource, ILocatable, ILocation):
         """
         Gets the text indicating special conditions have been met.
         """
-        return self.as_string('BigFish{OnReach}')
+        return self.as_string('BigFishOnReach')
 
     @property
     def on_end_big_fish(self) -> text.XivString:
         """
         Gets the text indicating special conditions have ended.
         """
-        return self.as_string('BigFish{OnEnd}')
+        return self.as_string('BigFishOnEnd')
 
     @property
     def fishing_spot_category(self):

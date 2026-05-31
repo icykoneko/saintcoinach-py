@@ -26,12 +26,12 @@ class TerritoryType(XivRow):
     @property
     def region_place_name(self):
         from .placename import PlaceName
-        return self.as_T(PlaceName, 'PlaceName{Region}')
+        return self.as_T(PlaceName, 'PlaceNameRegion')
 
     @property
     def zone_place_name(self):
         from .placename import PlaceName
-        return self.as_T(PlaceName, 'PlaceName{Zone}')
+        return self.as_T(PlaceName, 'PlaceNameZone')
 
     @property
     def weather_rate(self):

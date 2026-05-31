@@ -50,11 +50,11 @@ class Item(ItemBase):
 
     @property
     def bid(self):
-        return self.get_raw('Price{Low}')
+        return self.get_raw('PriceLow')
 
     @property
     def ask(self):
-        return self.get_raw('Price{Mid}')
+        return self.get_raw('PriceMid')
 
     @property
     def recipes_as_material(self):

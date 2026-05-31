@@ -11,7 +11,7 @@ class PlaceName(XivRow):
 
     @property
     def name_without_article(self) -> text.XivString:
-        return self.as_string('Name{NoArticle}')
+        return self.as_string('NameNoArticle')
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(PlaceName, self).__init__(sheet, source_row)

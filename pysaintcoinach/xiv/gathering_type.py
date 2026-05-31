@@ -13,11 +13,11 @@ class GatheringType(XivRow):
 
     @property
     def main_icon(self) -> ImageFile:
-        return self.as_image('Icon{Main}')
+        return self.as_image('IconMain')
 
     @property
     def sub_icon(self) -> ImageFile:
-        return self.as_image('Icon{Off}')
+        return self.as_image('IconOff')
 
     def __init__(self, sheet: IXivSheet, source_row: IRelationalRow):
         super(GatheringType, self).__init__(sheet, source_row)

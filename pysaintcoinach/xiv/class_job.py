@@ -26,17 +26,17 @@ class ClassJob(XivRow):
 
     @property
     def parent_class_job(self) -> 'ClassJob':
-        return self.as_T(ClassJob, 'ClassJob{Parent}')
+        return self.as_T(ClassJob, 'ClassJobParent')
 
     @property
     def starting_weapon(self) -> 'Item':
         from .item import Item
-        return self.as_T(Item, 'Item{StartingWeapon}')
+        return self.as_T(Item, 'ItemStartingWeapon')
 
     @property
     def soul_crystal(self) -> 'Item':
         from .item import Item
-        return self.as_T(Item, 'Item{SoulCrystal}')
+        return self.as_T(Item, 'ItemSoulCrystal')
 
     @property
     def starting_level(self) -> int:

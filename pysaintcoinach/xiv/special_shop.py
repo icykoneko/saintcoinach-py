@@ -23,33 +23,33 @@ class SpecialShopListing(IShopListing):
         REWARD_COUNT = 2
         rewards = []
         for i in range(REWARD_COUNT):
-            item = shop.as_T(Item, 'Item{Receive}', index, i)
+            item = shop.as_T(Item, 'ItemReceive', index, i)
             if item.key == 0:
                 continue
 
-            count = shop.as_int32('Count{Receive}', index, i)
+            count = shop.as_int32('CountReceive', index, i)
             if count == 0:
                 continue
 
-            hq = shop.as_boolean('HQ{Receive}', index, i)
+            hq = shop.as_boolean('HQReceive', index, i)
 
             rewards.append(ShopListingItem(self, item, count, hq, 0))
         self.__rewards = rewards
-        # self.__quest = shop.as_T(XivRow, 'Quest{Item}', index)
+        # self.__quest = shop.as_T(XivRow, 'QuestItem', index)
 
         COST_COUNT = 3
         costs = []
         for i in range(COST_COUNT):
-            item = shop.as_T(Item, 'Item{Cost}', index, i)
+            item = shop.as_T(Item, 'ItemCost', index, i)
             if item.key == 0:
                 continue
 
-            count = shop.as_int32('Count{Cost}', index, i)
+            count = shop.as_int32('CountCost', index, i)
             if count == 0:
                 continue
 
-            hq = shop.as_boolean('HQ{Cost}', index, i)
-            collectability_rating = shop.as_int16('CollectabilityRating{Cost}', index, i)
+            hq = shop.as_boolean('HQCost', index, i)
+            collectability_rating = shop.as_int16('CollectabilityRatingCost', index, i)
 
             costs.append(ShopListingItem(self, item, count, hq, collectability_rating))
         self.__costs = costs

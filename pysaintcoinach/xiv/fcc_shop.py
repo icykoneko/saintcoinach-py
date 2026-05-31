@@ -54,7 +54,7 @@ class FccShop(XivRow, IShop):
                 continue
 
             cost = self.as_int32('Cost', i)
-            required_rank = self.as_T(FCRank, 'FCRank{Required}', i)
+            required_rank = self.as_T(FCRank, 'FCRankRequired', i)
 
             listings.append(FccShop.Listing(self, item, cost_item, cost, required_rank))
         return listings
