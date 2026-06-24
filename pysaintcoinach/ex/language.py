@@ -10,6 +10,7 @@ class Language(Enum):
     chinese_simplified = "chs"
     chinese_traditional = "cht"
     korean = "ko"
+    traditional_chinese = "tc"
     unsupported = "?"
 
     def get_code(self):
