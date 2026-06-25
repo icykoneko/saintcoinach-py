@@ -1,11 +1,13 @@
 from typing import Iterable as IterableT, Sequence as SequenceT
 from struct import unpack_from
+import logging
 
 from .language import Language
 from .column import Column
 from ..file import File
 from .. import ex
 
+logger = logging.getLogger(__name__)
 
 class Header(object):
 
@@ -16,7 +18,9 @@ class Header(object):
                     4: Language.french,
                     5: Language.chinese_simplified,
                     6: Language.chinese_traditional,
-                    7: Language.korean}
+                    7: Language.korean,
+                    8: Language.traditional_chinese,
+    }
 
     @property
     def collection(self) -> 'ex.ExCollection':
@@ -131,9 +135,16 @@ class Header(object):
         count, = unpack_from(">H", buffer, COUNT_OFFSET)
         self.__available_languages = []
         for i in range(count):
-            lang = self.LANGUAGE_MAP[buffer[position]]
+            code = buffer[position]
+            lang = self.LANGUAGE_MAP.get(code)
+            if lang is None:
+                logger.warning("Unknown language code %u. Will set unsupported language.", code)
+                lang = Language.unsupported
+
             position += LENGTH
             if lang != Language.unsupported:
                 self.__available_languages += [lang]
 
         return
+
+
