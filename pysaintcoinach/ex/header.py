@@ -16,7 +16,8 @@ class Header(object):
                     4: Language.french,
                     5: Language.chinese_simplified,
                     6: Language.chinese_traditional,
-                    7: Language.korean}
+                    7: Language.korean,
+                    8: None}
 
     @property
     def collection(self) -> 'ex.ExCollection':
